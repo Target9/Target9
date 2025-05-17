@@ -1,7 +1,5 @@
 - 👋 Hi, I’m @Target9
 - 👀 I’m interested in Web development
-- 🌱 I’m currently learning Java
-- 💞️ I’m looking to collaborate
-- 📫 How to reach me discord: target8425
-- 😄 Pronouns: he/him
-- ⚡ Fun fact: I love cats and dogs but i LOVE cats
+- 📫 Reach me on discord. Target_not_the_shop
+- 😄 Pronouns: nick/her
+- 🔒 Love private repos
