@@ -1,5 +1,4 @@
 - 👋 Hi, I’m @Target9
 - 👀 I’m interested in Web development
 - 📫 Reach me on discord. Target_not_the_shop
-- 😄 Pronouns: nick/her
 - 🔒 Love private repos
