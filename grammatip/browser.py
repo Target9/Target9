@@ -40,6 +40,7 @@ WHISPER_PROMPTS = (
     "One letter or digit at a time, for example A, B, C, D, E, F.",
 )
 SUBMIT_INTERVAL = 8.0  # seconds; bursts get the token killed
+RESTART_PAUSE = 6.0    # seconds to wait before asking for a fresh challenge
 
 _models: dict[str, object] = {}
 _last_submit = 0.0
@@ -331,10 +332,14 @@ async def reach_credentials(page: Page, directory: str, tag: str, username: str,
                 await page.wait_for_timeout(1500)
             continue
 
+        # The dead-token page shows neither a captcha nor a picker. Restarting
+        # the entry point issues a fresh challenge for this session.
         await page.screenshot(path=os.path.join(directory, f"{tag}_stuck.png"),
                               full_page=True)
-        print(f"    step{step}: nothing to do at {page.url[:80]}", flush=True)
-        return False
+        print(f"    step{step}: restarting from {page.url[:60]}", flush=True)
+        await asyncio.sleep(RESTART_PAUSE)
+        await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
+        await page.wait_for_timeout(1500)
     return False
 
 

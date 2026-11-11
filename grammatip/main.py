@@ -69,11 +69,14 @@ async def run(args) -> int:
 
     async with async_playwright() as playwright:
         engine = await playwright.chromium.launch(headless=args.headless)
+        # One context is reused for the whole run. Launching a fresh context per
+        # attempt trips the gateway's rate limiting ("Der er opstået en fejl"),
+        # while a warm context keeps answering "Koden var forkert" normally.
+        context = await engine.new_context(viewport={"width": 1400, "height": 1000},
+                                           locale="da-DK")
+        page = await context.new_page()
         failures = 0
         for attempt in range(1, args.attempts + 1):
-            context = await engine.new_context(viewport={"width": 1400, "height": 1000},
-                                               locale="da-DK")
-            page = await context.new_page()
             log(f"attempt {attempt}")
             try:
                 if await browser.open_student(page, directory, f"a{attempt}",
@@ -88,14 +91,8 @@ async def run(args) -> int:
             except Exception as exc:
                 failures += 1
                 log(f"attempt {attempt} failed: {type(exc).__name__} {exc}")
-            finally:
-                if not os.path.exists(os.path.join(directory, "state.json")):
-                    try:
-                        await context.close()
-                    except Exception:
-                        pass
-            # the gateway throttles hard, so back off when chains keep failing
-            pause = min(90, 5 * failures)
+            # the gateway throttles hard, so pace the retries
+            pause = min(45, 4 * failures)
             log(f"backing off {pause}s")
             await asyncio.sleep(pause)
         await engine.close()
