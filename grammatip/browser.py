@@ -1,20 +1,29 @@
 """Browser side of the Grammatip automation.
 
 Everything that touches the page lives here: extracting the captcha image and
-audio from the STIL gateway, answering it, walking the UniLogin picker, filling
-the credentials and finally opening the student area.
+audio from the STIL gateway, answering it, walking the UniLogin provider picker,
+filling the credentials and finally opening the student area.
+
+Danish UI labels appear verbatim in comments and selectors because they have to
+match the real page; glosses are given on first use.
 
 The gateway's quirks (measured, not guessed):
 
 * each submission returns a fresh 6 character challenge, so one session can be
   kept alive for many rounds
-* a wrong answer is answered "Koden var forkert"; nothing is locked out, and
-  retries within the session are cheap
-* roughly one submission in five is answered with "Der er opstået en fejl"
-  instead, which kills that session's token; it is not caused by pacing or by
-  reading the page's media, so the only response is to start a new session
-* after the second gateway the "Loginvælger" page is shown again, and clicking
-  "Lokalt login" a second time is what reveals the username/password form
+* a wrong answer is answered "Koden var forkert" = "the code was wrong"; nothing
+  is locked out, and retries within the session are cheap
+* a correct answer can be answered with "Der er opstået en fejl" = "an error has
+  occurred" instead, which kills that session's token. Verified to mean the
+  answer was accepted but the redirect collapsed: codes read correctly off the
+  image still produced it, while a deliberately wrong code never did.
+* the challenge has no <form>: submission is done by F5's obfuscated JavaScript,
+  so a plain HTTP client gets "please enable JavaScript" and cannot submit it
+* the gateway's trust cannot be moved to another client -- cookies imported from
+  a passed browser session into `requests` still get challenged
+* the picker has three providers; only "Lokalt login" = "local login" detours
+  through a second challenge. "Unilogin" (`uni_idp`) goes straight to the
+  username/password form, which is the path this module takes.
 """
 
 from __future__ import annotations
@@ -57,11 +66,14 @@ def _whisper(name: str):
 
 # Minimum spacing between captcha submissions, across the whole process.
 #
-# This is enforced globally (not per session) because the limit is per client,
-# not per browser context: submitting from two contexts at once still trips it.
-# Measured: 8 s apart produced "Der er opstået en fejl" on ~20% of submissions
-# (which permanently kills that session's token), while 20 s and 45 s apart
-# produced none in 12 consecutive submissions.
+# This is enforced globally (not per session) because the limit behaves as if it
+# is per client, not per browser context: submitting from two contexts at once
+# still trips it.
+# Measured: 8 s apart produced "Der er opstået en fejl" (the gateway's error page,
+# which kills that session's token) on about 20% of submissions, while 20 s and
+# 45 s apart produced none in 12 consecutive submissions. Later A/B runs showed
+# the error also appears at 0 s on an untouched client, so it is not purely
+# pacing -- but pacing is still the cheap precaution.
 SUBMIT_INTERVAL = float(os.environ.get("GT_THROTTLE", "22"))
 _last_submit = 0.0
 
@@ -287,6 +299,7 @@ async def submit(page: Page, code: str) -> str:
         body = await page.inner_text("body")
     except Exception:
         body = ""
+    # "fejl" = error; the gateway's failure page rather than a rejection
     if "fejl" in body:
         return "dead"
     return "wrong"
@@ -395,13 +408,14 @@ async def _inputs(page: Page):
 
 
 async def _click_unilogin_idp(page: Page) -> bool:
-    """Click the "Unilogin" button on the Loginvælger page.
+    """Click the "Unilogin" button on the provider picker page.
 
     The picker offers three providers: Unilogin (`selectedIdp=uni_idp`), MitID
-    (`nemlogin3`) and "Lokalt login" (`showIdpList`). Only the last one goes
-    through the school-search page and gets challenged a second time; clicking
-    Unilogin goes straight to the "Brugernavn" -> "Adgangskode" form. This was
-    the wrong button for a long time.
+    (`nemlogin3`) and "Lokalt login" = "local login" (`showIdpList`). Only the
+    last one detours through the school-search page and gets challenged a second
+    time; Unilogin goes straight to the username -> password form
+    ("Brugernavn" -> "Adgangskode"). Picking the wrong button wasted a lot of
+    time here, so the selector names the Danish labels verbatim on purpose.
     """
     for selector in ("button[name='selectedIdp'][value='uni_idp']",
                      "button:has-text('Unilogin')"):
@@ -426,11 +440,11 @@ async def _click_local_login(page: Page) -> bool:
     return False
 
 
-# The UniLogin picker leads to a "Søg efter lokalt login" page: a single text
-# field named `username` (which takes the UniLogin username, not an email —
-# "cons0418" works, "cons0418@unilogin.dk" does not) plus a hidden-looking
-# "Næste" submit button that is `sr-only`, so it must be activated by name/value
-# rather than by clicking the visible text.
+# The picker leads to a "Søg efter lokalt login" = "search for local login" page:
+# a single text field named `username` (which takes the UniLogin username, not an
+# email -- "cons0418" works, "cons0418@unilogin.dk" does not) plus a
+# hidden-looking "Næste" = "Next" submit button that is `sr-only`, so it has to be
+# activated by name/value rather than by clicking visible text.
 IDP_SEARCH = "input#idp-search, input[name='username']"
 IDP_NEXT = "button[name='navigate'][value='next']"
 

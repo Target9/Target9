@@ -50,15 +50,28 @@ the regression set, against 2/5 for a naive relative rule.
 
 ## Facts established by running it
 
-* **The checker ignores case.** An all-lowercase reading of a mixed-case code was
-  accepted outright (`htg2ym` for `HTG2YM`).
-* **Each submission issues a new code**, so one answer per challenge — trying
-  several spellings in a row answers different puzzles.
-* **`Der er opstået en fejl` is rate limiting, and it is sticky.** It kills the
-  session token. At 20–45 s spacing, 12 consecutive submissions produced none;
-  below ~15 s it appears often. The budget is **per client, not per browser
-  context**, so parallel workers only burn it faster, and recovery needs many
-  minutes of complete silence.
+Danish UI text appears quoted verbatim because it is what the page actually
+shows; glosses are given inline.
+
+* **The checker is case-insensitive.** An all-lowercase reading of a mixed-case
+  code was accepted outright (`htg2ym` for `HTG2YM`).
+* **Each submission issues a new code**, so it is one answer per challenge —
+  trying several spellings in a row just answers different puzzles.
+* **A correctly read code can still fail with `Der er opstået en fejl`** ("an
+  error has occurred"). This was verified not to be a wrong answer: codes I
+  confirmed by eye against the image produced it, while a deliberately wrong code
+  (`aaaaaa`) returned `Koden var forkert` ("the code was wrong") 7 times out of 7.
+  It means the answer was accepted but the redirect chain collapsed.
+* **The challenge page has no `<form>`.** Submission is performed by F5's
+  obfuscated JavaScript, so a plain HTTP client cannot submit it at all — it gets
+  `Please enable JavaScript to view the page content.`
+* **Gateway trust does not transfer between clients.** Cookies taken from a
+  browser session that had already passed the gateway, imported into a `requests`
+  session, were challenged again. Trust is bound to the live browser session.
+* **The picker's three providers are not equivalent.** "Lokalt login" ("local
+  login", `showIdpList`) detours through a school-search page and a *second*
+  challenge; **Unilogin** (`selectedIdp=uni_idp`) goes straight to the
+  `Brugernavn` ("username") → `Næste` ("next") → `Adgangskode` ("password") form.
 * **The username is a UniLogin username** (`cons0418`), not an email; the plain
   `/login/local` form on grammatip.com rejects it.
 * **A bare `input[type=text]` on the bot-check page is the captcha box.** An
@@ -111,28 +124,35 @@ setup.sh            system + Python dependencies
 
 ## Status
 
-**No assignment has been completed.** The login does not complete reliably, so
-nothing was entered on the site.
+**No assignment has been completed.** The login does not complete, so nothing was
+entered on the site.
 
 What works:
 
-* the captcha reader — 4/5 on a hand-verified regression set, and it is right on
-  the clear majority of live challenges
-* the login flow shape is now correct and verified in stages: gateway →
-  `Loginvælger` → Unilogin → `Brugernavn` → `Næste` → `Adgangskode` → `Log ind`
-* the first gateway is cleared regularly
+* the captcha reader — 4/5 on a hand-verified regression set, and correct on the
+  clear majority of live challenges. Audio gives the letters, the image corrects
+  positions where it is clearly the better match.
+* the login flow shape is correct and verified stage by stage: gateway →
+  provider picker → Unilogin → `Brugernavn` → `Næste` → `Adgangskode` → `Log ind`
+* a single submission to the first gateway passes roughly 1 time in 3–4
 
-What blocks completion: each attempt needs one correct captcha answer, and every
-submission has a substantial chance of killing the session token outright. Once
-the per-client budget is exhausted — which several hours of automated retries
-will do — **every** attempt returns the error page immediately, including from a
-normal Chrome with no automation flags. That was confirmed: a clean,
-non-automated Chrome gets the same `Der er opstået en fejl` page, so it is not a
-browser-fingerprint problem.
+What blocks completion: the flow needs **two** gateway passes in one session (the
+gateway re-challenges after the provider click), and each pass is an independent
+low-probability event that can also fail after being answered correctly. Across
+rough runs the first gateway passed on the order of 1 attempt in 10, the second
+far less often, and never with the sign-in completing.
 
-The practical route from here is to solve the single gateway by hand in one
-sitting at human pace — the flow then carries through to the assignments — or to
-have the account owner confirm whether a non-UniLogin login route exists.
+Things ruled out with tests rather than guesses: it is not browser
+fingerprinting (a plain, non-automated Chrome fails identically), not answer
+grading (wrong codes still return `Koden var forkert` cleanly), not challenge TTL
+(25 s delays behave the same), and not transferable session state (imported
+cookies are still challenged). A plain `requests` client cannot submit the
+challenge at all, because the page has no form.
+
+The practical route from here is to log in once by hand in a real browser and
+supply the resulting session cookies for `grammatip.com`, so the student area can
+be fetched directly without the gateway, or to have the account owner confirm
+whether a non-UniLogin login route exists.
 
 ## Artifacts
 
