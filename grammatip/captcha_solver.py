@@ -32,23 +32,21 @@ FONT_PATHS = (
 FONT_SIZES = (26, 30, 34, 38, 42, 46)
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
-# Look-alikes, used to widen the candidate set when reading the picture and when
-# generating alternative spellings. The important entries are the ones whisper
-# confuses with each other: v/Z (both read as "vee"), f/s, b/8, d/o, m/n.
-CONFUSABLE = {
-    "0": "ODQov", "O": "0DQo", "D": "0O", "Q": "0O", "o": "0OD",
-    "1": "ILlji", "I": "1Llj", "L": "1I", "l": "1Ii", "i": "1lj", "j": "1il",
-    "2": "Zz7", "Z": "2z7v", "z": "2Z", "7": "2T",
-    "5": "Ss", "S": "5sFf", "s": "5S", "F": "fE5", "f": "Ft5", "E": "Fe",
-    "8": "Bb3", "B": "8b", "b": "8B", "3": "8",
-    "6": "Gb", "G": "6C", "9": "gq", "g": "9q", "q": "9g",
-    "U": "VYuv", "V": "UYvZy", "u": "VYn", "v": "UYZy",
-    "Y": "Vvy", "y": "Yv",
-    "W": "wM", "w": "WMm", "M": "WNm", "N": "MHn", "H": "Nnh", "h": "Nnb",
-    "C": "Gc", "c": "Ce", "e": "cE", "T": "7t", "t": "fT",
-    "K": "kX", "X": "xK", "P": "pR", "R": "Pr", "n": "hmru", "m": "hn",
-    "r": "n", "A": "4", "4": "A",
-}
+# Glyphs that get confused with each other, as *clusters*: every member of a
+# cluster is a candidate for every other. Written this way because the useful
+# relation is rarely symmetric — whisper hears "F" where the picture shows "s",
+# or "V" where the picture shows "b" — and a one-way table kept missing those.
+_CLUSTERS = (
+    "0OoQD", "1Ilij", "2Zz7", "5SsFf", "8Bb6", "9gq", "38",
+    "UVuvYyZzBb", "WwMmNnHh", "CcG", "EeF", "Tt7", "KkXx", "PpRr", "Aa4",
+)
+
+CONFUSABLE: dict[str, str] = {}
+for _cluster in _CLUSTERS:
+    for _char in _cluster:
+        others = CONFUSABLE.get(_char, "")
+        CONFUSABLE[_char] = others + "".join(
+            c for c in _cluster if c != _char and c not in others)
 
 _GLYPH_SIZE = (26, 34)
 _templates: dict[str, list[np.ndarray]] | None = None

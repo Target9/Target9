@@ -170,8 +170,14 @@ class Challenge:
                 (score for char, score in ranked
                  if char.lower() == chosen[position]),
                 float("inf"))
-            # override only with a clear margin, so noise cannot flip a position
-            if top_score < 0.12 and top_score * 2.0 < audio_score:
+            # The picture wins only when it is a *good* match and much better than
+            # the audio's letter. Both bounds matter: in a noisy image every
+            # template scores badly, and a purely relative rule then "corrects"
+            # letters the audio had right. These thresholds were calibrated on
+            # hand-verified challenges, where genuine corrections scored 0.12-0.16
+            # at a ratio of 0.35-0.46, while noise artifacts scored >=0.21 at
+            # ratios >=0.75.
+            if top_score < 0.18 and top_score < audio_score * 0.55:
                 chosen[position] = top_char.lower()
         return "".join(chosen)
 
@@ -320,6 +326,26 @@ async def _inputs(page: Page):
         return []
 
 
+async def _click_unilogin_idp(page: Page) -> bool:
+    """Click the "Unilogin" button on the Loginvælger page.
+
+    The picker offers three providers: Unilogin (`selectedIdp=uni_idp`), MitID
+    (`nemlogin3`) and "Lokalt login" (`showIdpList`). Only the last one goes
+    through the school-search page and gets challenged a second time; clicking
+    Unilogin goes straight to the "Brugernavn" -> "Adgangskode" form. This was
+    the wrong button for a long time.
+    """
+    for selector in ("button[name='selectedIdp'][value='uni_idp']",
+                     "button:has-text('Unilogin')"):
+        try:
+            if await page.query_selector(selector):
+                await page.click(selector, timeout=6000)
+                return True
+        except Exception:
+            continue
+    return False
+
+
 async def _click_local_login(page: Page) -> bool:
     for selector in ("button[name='showIdpList']", "button:has-text('Lokalt login')",
                      "text=Lokalt login"):
@@ -394,98 +420,91 @@ async def _fill_and_submit_credentials(page: Page, username: str, password: str)
     return False
 
 
-async def pass_gateways(page: Page, directory: str, tag: str) -> bool:
-    """Clear the bot-check wherever it appears, then re-enter through UniLogin.
+async def pass_gateway(page: Page, directory: str, tag: str) -> bool:
+    """Clear the bot-check on arrival at /unilogin.
 
-    The gateway challenges us twice per session: once on arriving at /unilogin,
-    and again when the "Lokalt login" POST is submitted. Once both are cleared it
-    stops challenging us, and re-entering /unilogin goes straight to the IdP
-    picker — the click then leads to the "Søg efter lokalt login" page instead of
-    Keycloak's "Der skete en fejl" page.
+    Only this one challenge has to be answered: the "Unilogin" provider button
+    leads to the username/password form without being challenged again.
     """
     await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
-    await page.wait_for_timeout(1200)
+    await page.wait_for_timeout(1500)
 
-    # Stage 1: the challenge shown on arrival.
-    if not await page.query_selector("#ans"):
-        print("    no first challenge", flush=True)
-        return False
-    state = await answer_challenge(page, directory, f"{tag}g1")
+    if "security-check" not in page.url and not await page.query_selector("#ans"):
+        print("    no gateway challenge shown", flush=True)
+        return True
+    state = await answer_challenge(page, directory, f"{tag}g")
     if state != "passed":
-        print(f"    first gateway {state}", flush=True)
+        print(f"    gateway {state}", flush=True)
         return False
-    print("    first gateway passed", flush=True)
-
-    # Stage 2: click "Lokalt login"; the POST is challenged.
-    await page.wait_for_timeout(1800)
-    if not await _click_local_login(page):
-        print("    no Lokalt login button", flush=True)
-        return False
-    await page.wait_for_timeout(4500)
-
-    if await page.query_selector("#ans"):
-        state = await answer_challenge(page, directory, f"{tag}g2")
-        if state != "passed":
-            print(f"    second gateway {state}", flush=True)
-            return False
-        print("    second gateway passed", flush=True)
-        await page.wait_for_timeout(2000)
-    else:
-        # Sometimes the click goes through unchallenged; either way we need to
-        # end up on the picker for the re-entry step to work.
-        print("    second gateway not shown", flush=True)
-
-    try:
-        body = (await page.inner_text("body")).replace("\n", " ")
-    except Exception:
-        body = ""
-    if "Der skete en fejl" in body:
-        print("    Keycloak rejected the replay", flush=True)
-        return False
+    print("    gateway passed", flush=True)
+    await page.wait_for_timeout(2000)
     return True
 
 
 async def sign_in(page: Page, directory: str, tag: str, username: str,
                   password: str) -> bool:
-    """Type the credentials on whatever login page the gateway left us on.
+    """Unilogin picker -> Brugernavn -> Næste -> Adgangskode -> Log ind."""
+    # The picker may need a moment after the gateway redirect.
+    for _ in range(10):
+        if await page.query_selector("button[name='selectedIdp'][value='uni_idp']"):
+            break
+        await page.wait_for_timeout(600)
+    print(f"    picker url={page.url[:70]}", flush=True)
+    await page.screenshot(path=os.path.join(directory, f"{tag}_picker.png"),
+                          full_page=True)
 
-    Important: do *not* navigate away first. Passing the second gateway leaves
-    the browser on Keycloak's `login-actions` URL, already authorised to show the
-    "Søg efter lokalt login" page. Going back to /unilogin throws that away.
-    """
-    for step in range(1, 15):
-        if await page.query_selector("input[type='password']"):
-            print(f"    step{step}: password form", flush=True)
-            break
-        if await _at_idp_search(page):
-            print(f"    step{step}: IdP search page", flush=True)
-            await page.screenshot(path=os.path.join(directory, f"{tag}_idp.png"),
-                                  full_page=True)
-            if not await _submit_idp_search(page, username):
-                return False
-            await page.wait_for_timeout(4500)
-            continue
-        if await _fill_and_submit_credentials(page, username, password):
-            print(f"    step{step}: submitted a credential form", flush=True)
-            await page.wait_for_timeout(9000)
-            break
+    if not await _click_unilogin_idp(page):
+        print("    no Unilogin button", flush=True)
+        return False
+    print("    clicked Unilogin", flush=True)
+    await page.wait_for_timeout(4000)
+
+    # Clicking Unilogin can itself hit the bot-check. Clear it, then look for the
+    # username form again.
+    for stage in range(1, 4):
         if await page.query_selector("#ans"):
-            state = await answer_challenge(page, directory, f"{tag}x{step}")
+            print(f"    step{stage}: gateway after Unilogin", flush=True)
+            state = await answer_challenge(page, directory, f"{tag}u{stage}")
             if state != "passed":
-                print(f"    step{step}: late gateway {state}", flush=True)
+                print(f"    step{stage}: gateway {state}", flush=True)
                 return False
-            await page.wait_for_timeout(2500)
+            await page.wait_for_timeout(3000)
             continue
-        if await _click_local_login(page):
-            print(f"    step{step}: clicked Lokalt login", flush=True)
-            await page.wait_for_timeout(4500)
-            continue
+        if await page.query_selector("input[type='password']") or \
+                await page.query_selector("input#idp-search") or \
+                await page.query_selector("input[name='username']"):
+            break
+        await page.wait_for_timeout(2500)
+
+    # Step 1: Brugernavn.
+    if not await _type_username(page, username):
+        await page.screenshot(path=os.path.join(directory, f"{tag}_nouser.png"),
+                              full_page=True)
+        print(f"    no username field at {page.url[:70]}", flush=True)
+        return False
+    print("    entered username", flush=True)
+    await page.wait_for_timeout(4500)
+
+    # Step 2: Adgangskode.
+    if not await page.query_selector("input[type='password']"):
+        await page.wait_for_timeout(2500)
+    if not await page.query_selector("input[type='password']"):
+        body = ""
         try:
             body = (await page.inner_text("body")).replace("\n", " ")
         except Exception:
-            body = ""
-        print(f"    step{step}: nothing to do ({body[:70]!r})", flush=True)
+            pass
+        print(f"    no password field ({body[:90]!r})", flush=True)
+        await page.screenshot(path=os.path.join(directory, f"{tag}_nopass.png"),
+                              full_page=True)
         return False
+
+    await page.screenshot(path=os.path.join(directory, f"{tag}_password.png"),
+                          full_page=True)
+    if not await _fill_and_submit_password(page, password):
+        return False
+    print("    submitted password", flush=True)
+    await page.wait_for_timeout(10000)
 
     await page.screenshot(path=os.path.join(directory, f"{tag}_afterlogin.png"),
                           full_page=True)
@@ -497,36 +516,78 @@ async def sign_in(page: Page, directory: str, tag: str, username: str,
         text = ""
     print(f"    after login url={page.url[:80]}", flush=True)
     print(f"    after login text={text[:160]!r}", flush=True)
-    return True
+    return "security-check" not in page.url
+
+
+async def _type_username(page: Page, username: str) -> bool:
+    """Fill the Brugernavn field and press Næste.
+
+    Careful: the bot-check page also has a text input (`#ans`), so a loose
+    `input[type='text']` selector types the username into the captcha box — which
+    is exactly what happened before this was tightened up. The captcha field is
+    excluded explicitly, and the dedicated `#idp-search` field is preferred over
+    any generic text input.
+    """
+    selectors = ("input#idp-search", "input[name='username']", "input#username",
+                 "input[name='j_username']")
+    for selector in selectors:
+        try:
+            field = await page.query_selector(selector)
+        except Exception:
+            field = None
+        if not field:
+            continue
+        if selector == "input[name='username']" and await page.query_selector("#ans"):
+            # still on the bot-check page: the username box is not here yet
+            continue
+        try:
+            await page.fill(selector, username)
+        except Exception:
+            continue
+        for button in ("button[name='navigate'][value='next']",
+                       "button:has-text('Næste')", "input[type='submit']",
+                       "button[type='submit']"):
+            try:
+                if await page.query_selector(button):
+                    await page.click(button, timeout=5000)
+                    return True
+            except Exception:
+                continue
+        try:
+            await page.eval_on_selector(selector, "el => el.form.requestSubmit()")
+        except Exception:
+            pass
+        return True
+    return False
+
+
+async def _fill_and_submit_password(page: Page, password: str) -> bool:
+    try:
+        await page.fill("input[type='password']", password)
+    except Exception:
+        return False
+    for button in ("button[type='submit']", "input[type='submit']",
+                   "button:has-text('Log ind')", "button:has-text('Næste')"):
+        try:
+            if await page.query_selector(button):
+                await page.click(button, timeout=5000)
+                return True
+        except Exception:
+            continue
+    try:
+        await page.eval_on_selector("input[type='password']",
+                                    "el => el.form.requestSubmit()")
+        return True
+    except Exception:
+        return False
 
 
 async def open_student(page: Page, directory: str, tag: str, username: str,
                        password: str) -> bool:
-    """Pass the gateways, save the trusted session, then sign in.
-
-    Once the gateway has accepted one answer, its cookie stays trusted. Saving it
-    means a later run can skip the captcha entirely and retry only the step that
-    actually failed, which is what makes the whole thing converge.
-    """
-    trusted_path = os.path.join(directory, "trusted_state.json")
-
-    if os.path.exists(trusted_path):
-        try:
-            await page.context.add_cookies(
-                json.load(open(trusted_path)).get("cookies", []))
-            print("    reusing trusted gateway cookies", flush=True)
-        except Exception:
-            pass
-    else:
-        if not await pass_gateways(page, directory, tag):
-            return False
-        try:
-            state = await page.context.storage_state()
-            with open(trusted_path, "w") as handle:
-                json.dump(state, handle)
-            print("    saved trusted gateway state", flush=True)
-        except Exception:
-            pass
+    """Clear the gateway, then sign in via the Unilogin provider and open the
+    student area."""
+    if not await pass_gateway(page, directory, tag):
+        return False
 
     if not await sign_in(page, directory, tag, username, password):
         return False
