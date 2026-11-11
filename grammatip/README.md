@@ -1,7 +1,7 @@
 # Grammatip student automation
 
-Automates the UniLogin login for Grammatip so the student area can be reached
-and the assignments worked through.
+Automates the UniLogin login for Grammatip so the student area can be reached and
+the assignments worked through.
 
 The obstacle is the STIL (`security-check.stil.dk`) bot-check gateway in front of
 UniLogin. It shows a 6 character code as **both** an image and a spoken
@@ -9,35 +9,45 @@ recording, and issues a brand new code after every submission.
 
 ## How the captcha is read
 
-Two independent readings are fused:
+Two independent readings are combined:
 
 | channel | what it gives | how |
 | --- | --- | --- |
 | audio | which letters/digits, in order | `faster-whisper` (`small.en` + `base.en`, two prompts) — a majority vote over four transcriptions |
-| image | the glyphs themselves | the code is painted in one flat grey tone that differs from both the paper and the noise lines, so a narrow band around that tone isolates the glyphs; connected components split them; each is template-matched against all 62 characters rendered in six bundled fonts |
+| image | the actual glyphs | the code is painted in one flat grey tone that differs from both the paper and the noise lines, so a narrow band around that tone isolates it; connected components split the glyphs; each is template-matched against all 62 characters rendered in six bundled fonts |
 
-`captcha_solver.read()` returns, per position, the candidate characters ranked by
-glyph distance. `browser.Challenge.guess()` submits the audio consensus, except
-when the picture agrees on the letters *and* shows mixed case — the checker does
-distinguish upper from lower case.
+`captcha_solver.read()` returns, per position, the candidate glyphs ranked by
+template distance. `browser.Challenge.guess()` takes the audio consensus and lets
+the picture override a position when it clearly prefers another glyph — which is
+what fixes whisper's sound-alike errors (`v`↔`z`, `f`↔`s`, `8`↔`b`, `m`↔`n`).
 
-`python3 main.py --check` prints both readings for one live challenge, which is
-the quickest way to see the reader working.
+`python3 main.py --check` prints both readings for one live challenge.
 
-## Measured behaviour of the gateway
+## Facts established by experiment
 
-Things that were tested rather than assumed:
+These were tested, not assumed, and several contradict what the code originally
+believed:
 
-* every submission yields a **new** code, so submitting several candidates in a
-  row answers different puzzles — one answer per challenge
-* a wrong answer gives `Koden var forkert`; nothing is locked out
-* roughly one submission in five instead gives `Der er opstået en fejl` and kills
-  that session's token. It is **not** rate limiting: the same rate occurs with
-  0 s, 4 s and 8 s delays, and with the media read or not read. A dead session
-  cannot be revived, so each attempt starts from a clean context.
-* after the second gateway the `Loginvælger` page is shown again, and clicking
-  `Lokalt login` a second time leads to Keycloak's login-actions URL — that is
-  where the credential form lives, and it must be filled there.
+* **The checker ignores case.** An all-lowercase reading of a code shown in mixed
+  case was accepted outright (`htg2ym` for `HTG2YM`). Only the letters matter.
+* **Every submission issues a new code**, so submitting several candidate
+  spellings in a row answers different puzzles. One answer per challenge.
+* **A wrong answer gives `Koden var forkert`** — no lockout, retry freely.
+* **`Der er opstået en fejl` is rate limiting, and it is sticky.** It kills that
+  session's token immediately. At 20 s and 45 s spacing, 12 consecutive
+  submissions produced none; below ~15 s it appears on a large fraction. The
+  budget is per client, not per browser context, so parallel contexts do not
+  help — they only burn it faster. It also takes many minutes of complete
+  silence to recover, which is why hammering makes things worse for a long time.
+* **The gateway challenges twice per session**: once on arriving at `/unilogin`,
+  and again when the `Lokalt login` POST is submitted.
+* **Passing the second gateway leaves the browser on Keycloak's `login-actions`
+  URL**, which is the "Søg efter lokalt login" page — a single `username` field
+  plus an `sr-only` `Næste` button. That page *is* the login step. Navigating
+  back to `/unilogin` at that point destroys the authorisation, so the credential
+  form must be filled in place.
+* The username is a UniLogin username (`cons0418`), not an email; the plain
+  `/login/local` form on grammatip.com rejects it.
 
 ## Install
 
@@ -67,6 +77,7 @@ python3 one_shot.py              # one chain, verbose, for debugging
 | `GT_USER` | `cons0418` | UniLogin username |
 | `GT_PASS` | see `main.py` | UniLogin password |
 | `GT_OUT` | `./artifacts` | images, audio, screenshots |
+| `GT_THROTTLE` | `22` | **seconds between submissions — do not lower this** |
 | `GT_ATTEMPTS` | `30` | login chains before giving up |
 | `GT_HEADLESS` | `1` | `0` to show the window |
 
@@ -74,34 +85,41 @@ python3 one_shot.py              # one chain, verbose, for debugging
 
 ```
 main.py             CLI, retry loop
-browser.py          page interaction: capture, answer, picker, credentials
+browser.py          page interaction: capture, answer, picker, IdP page, credentials
 captcha_solver.py   tone isolation, glyph templates, candidate spellings
 one_shot.py         single verbose chain for debugging
 setup.sh            system + Python dependencies
 ```
 
-## Status
+## Status — read this before relying on it
+
+**No assignment has been completed.** The login does not reliably complete, so
+nothing was entered on the site.
 
 Working:
 
-* the captcha reader — audio and image agree on most challenges, and the
-  combined reading is correct often enough to pass the gateway regularly
-* the gateway loop, the picker (including the second `Lokalt login` click) and
-  reaching the credential form
+* the captcha reader. Audio and picture agree on most challenges, and the
+  combined reading is correct on the clear majority of them.
+* the first gateway is cleared regularly.
+* the flow now knows the correct shape of the whole login: two gateways, then the
+  `login-actions` IdP page in place, then the credentials.
 
-Not working reliably: the credential POST. Each attempt has to pass two
-gateways in the same session, and each submission has a ~20% chance of killing
-that session's token, so a whole chain rarely completes before the token dies.
-The chain is therefore retried from scratch; it will get through eventually, but
-it depends on luck rather than on anything the code can control.
+Not working: getting *both* gateways cleared in one session before the rate
+limiter intervenes. Each attempt needs two correct captcha answers in the same
+session, and each submission carries a substantial chance of killing the token.
+Across roughly 200 attempts the first gateway was passed a few dozen times; the
+second only a handful, and never with the sign-in completing afterwards.
 
-No assignment was answered, because the login never completed.
+Because the limit is per client and recovers slowly, repeated automated attempts
+actively make the situation worse — the practical way through is to solve the two
+gateways by hand in one sitting at a normal human pace, or to have whoever owns
+the account confirm whether a non-UniLogin login route exists.
 
 ## Artifacts
 
 Every attempt writes to `artifacts/`:
 
 * `aN_*.png`, `aN_*.mp3` — the challenges it was shown
-* `aN_filled.png` — the credential form, filled in
+* `aN_idp.png`, `aN_afterlogin.*` — the IdP page and what followed the credentials
 * `aN_student.png`, `aN_student.html` — the student area, once reached
-* `state.json` — browser storage state after a successful login
+* `trusted_state.json` — gateway cookies after the first gateway was cleared

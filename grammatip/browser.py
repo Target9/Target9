@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import json
 import os
 import subprocess
 import time
@@ -41,11 +42,9 @@ WHISPER_PROMPTS = (
     "The speaker spells a code of six characters, letters and digits.",
     "One letter or digit at a time, for example A, B, C, D, E, F.",
 )
-SUBMIT_INTERVAL = 1.0  # seconds between submissions (the gateway tolerates this)
 RESTART_PAUSE = 2.0    # seconds to wait before asking for a fresh challenge
 
 _models: dict[str, object] = {}
-_last_submit = 0.0
 
 
 def _whisper(name: str):
@@ -54,6 +53,26 @@ def _whisper(name: str):
 
         _models[name] = WhisperModel(name, device="cpu", compute_type="int8")
     return _models[name]
+
+
+# Minimum spacing between captcha submissions, across the whole process.
+#
+# This is enforced globally (not per session) because the limit is per client,
+# not per browser context: submitting from two contexts at once still trips it.
+# Measured: 8 s apart produced "Der er opstået en fejl" on ~20% of submissions
+# (which permanently kills that session's token), while 20 s and 45 s apart
+# produced none in 12 consecutive submissions.
+SUBMIT_INTERVAL = float(os.environ.get("GT_THROTTLE", "22"))
+_last_submit = 0.0
+
+
+async def _respect_interval() -> None:
+    """Block until SUBMIT_INTERVAL has passed since the last submission."""
+    global _last_submit
+    remaining = SUBMIT_INTERVAL - (time.time() - _last_submit)
+    if remaining > 0:
+        await asyncio.sleep(remaining)
+    _last_submit = time.time()
 
 
 def transcribe(mp3_path: str, model_name: str, prompt: str) -> str:
@@ -125,24 +144,36 @@ class Challenge:
         return self.heard[0]
 
     def guess(self) -> str | None:
-        """The answer to submit.
+        """The best answer to submit.
 
-        The two channels agree on the letters most of the time, and when they do
-        the picture supplies the exact upper/lower case, which the checker does
-        distinguish. When they disagree we trust the audio consensus, because a
-        mis-segmented glyph can corrupt an otherwise correct reading.
+        The checker ignores case (verified: submitting an all-lowercase reading of
+        a code that appeared in mixed case was accepted), so only the *letters*
+        matter. The two channels are complementary: the audio names the letters
+        but misses sound-alikes (V/Z, F/S, 8/B, M/N), while the picture has the
+        exact glyphs but is noisy. So the audio supplies the string and the
+        picture overrides any position where it clearly prefers another glyph.
         """
         consensus = self.consensus
         if not consensus:
             return None
-        if self.ranked:
-            picture = solver.best_code(self.ranked)
-            if (len(picture) == len(consensus)
-                    and picture.upper() == consensus.upper()
-                    and picture != picture.upper()):
-                # same letters, and the picture sees mixed case: use it
-                return picture
-        return consensus
+        if not self.ranked:
+            return consensus.lower()
+
+        chosen = list(consensus.lower())
+        for position, ranked in enumerate(self.ranked):
+            if position >= len(chosen) or not ranked:
+                continue
+            top_char, top_score = ranked[0]
+            if top_char.lower() == chosen[position]:
+                continue
+            audio_score = next(
+                (score for char, score in ranked
+                 if char.lower() == chosen[position]),
+                float("inf"))
+            # override only with a clear margin, so noise cannot flip a position
+            if top_score < 0.12 and top_score * 2.0 < audio_score:
+                chosen[position] = top_char.lower()
+        return "".join(chosen)
 
     def candidates(self, limit: int = 16) -> list[str]:
         """Ordered spellings to try, best first.
@@ -209,13 +240,13 @@ async def grab_media(page: Page, directory: str, tag: str) -> Challenge | None:
     return Challenge(image_path, audio_path)
 
 
-async def submit(page: Page, code: str, throttle: float = SUBMIT_INTERVAL) -> str:
-    """Submit one answer. Returns 'passed', 'wrong', 'dead' or 'error'."""
-    global _last_submit
-    remaining = throttle - (time.time() - _last_submit)
-    if remaining > 0:
-        await page.wait_for_timeout(int(remaining * 1000))
-    _last_submit = time.time()
+async def submit(page: Page, code: str) -> str:
+    """Submit one answer. Returns 'passed', 'wrong', 'dead' or 'error'.
+
+    Waits for the global submission interval first, so that concurrent attempts
+    cannot combine into a burst.
+    """
+    await _respect_interval()
 
     try:
         await page.fill("#ans", code)
@@ -301,6 +332,46 @@ async def _click_local_login(page: Page) -> bool:
     return False
 
 
+# The UniLogin picker leads to a "Søg efter lokalt login" page: a single text
+# field named `username` (which takes the UniLogin username, not an email —
+# "cons0418" works, "cons0418@unilogin.dk" does not) plus a hidden-looking
+# "Næste" submit button that is `sr-only`, so it must be activated by name/value
+# rather than by clicking the visible text.
+IDP_SEARCH = "input#idp-search, input[name='username']"
+IDP_NEXT = "button[name='navigate'][value='next']"
+
+
+async def _at_idp_search(page: Page) -> bool:
+    try:
+        return bool(await page.query_selector(IDP_SEARCH)) and not bool(
+            await page.query_selector("input[type='password']"))
+    except Exception:
+        return False
+
+
+async def _submit_idp_search(page: Page, username: str) -> bool:
+    """Type the UniLogin username on the IdP search page and press Næste."""
+    try:
+        await page.fill(IDP_SEARCH, username)
+    except Exception:
+        return False
+    for selector in (IDP_NEXT, "button:has-text('Næste')", "input[type='submit']",
+                     "button[type='submit']"):
+        try:
+            if await page.query_selector(selector):
+                await page.click(selector, timeout=5000)
+                return True
+        except Exception:
+            continue
+    try:  # last resort: submit the form programmatically
+        await page.eval_on_selector(
+            f"xpath=//input[@id='idp-search']/ancestor::form[1]",
+            "form => form.requestSubmit()")
+        return True
+    except Exception:
+        return False
+
+
 async def _fill_and_submit_credentials(page: Page, username: str, password: str) -> bool:
     """Type the credentials into whatever login form is on the page and submit."""
     fields = _credential_selectors(await _inputs(page))
@@ -323,75 +394,142 @@ async def _fill_and_submit_credentials(page: Page, username: str, password: str)
     return False
 
 
-async def reach_credentials(page: Page, directory: str, tag: str, username: str,
-                            password: str, steps: int = 25) -> bool:
-    """Walk the gateway and the UniLogin picker until we are signed in.
+async def pass_gateways(page: Page, directory: str, tag: str) -> bool:
+    """Clear the bot-check wherever it appears, then re-enter through UniLogin.
 
-    Passing the bot-check in front of the "Lokalt login" POST makes Keycloak land
-    on its login-actions URL, which is where the credential form appears. So the
-    loop does not stop at "a form exists": it fills and submits it in place.
+    The gateway challenges us twice per session: once on arriving at /unilogin,
+    and again when the "Lokalt login" POST is submitted. Once both are cleared it
+    stops challenging us, and re-entering /unilogin goes straight to the IdP
+    picker — the click then leads to the "Søg efter lokalt login" page instead of
+    Keycloak's "Der skete en fejl" page.
     """
-    submitted = False
-    for step in range(1, steps + 1):
-        fields = _credential_selectors(await _inputs(page))
-        if fields and not submitted:
-            print(f"    step{step}: credential form", flush=True)
-            await page.screenshot(path=os.path.join(directory, f"{tag}_filled.png"),
+    await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
+    await page.wait_for_timeout(1200)
+
+    # Stage 1: the challenge shown on arrival.
+    if not await page.query_selector("#ans"):
+        print("    no first challenge", flush=True)
+        return False
+    state = await answer_challenge(page, directory, f"{tag}g1")
+    if state != "passed":
+        print(f"    first gateway {state}", flush=True)
+        return False
+    print("    first gateway passed", flush=True)
+
+    # Stage 2: click "Lokalt login"; the POST is challenged.
+    await page.wait_for_timeout(1800)
+    if not await _click_local_login(page):
+        print("    no Lokalt login button", flush=True)
+        return False
+    await page.wait_for_timeout(4500)
+
+    if await page.query_selector("#ans"):
+        state = await answer_challenge(page, directory, f"{tag}g2")
+        if state != "passed":
+            print(f"    second gateway {state}", flush=True)
+            return False
+        print("    second gateway passed", flush=True)
+        await page.wait_for_timeout(2000)
+    else:
+        # Sometimes the click goes through unchallenged; either way we need to
+        # end up on the picker for the re-entry step to work.
+        print("    second gateway not shown", flush=True)
+
+    try:
+        body = (await page.inner_text("body")).replace("\n", " ")
+    except Exception:
+        body = ""
+    if "Der skete en fejl" in body:
+        print("    Keycloak rejected the replay", flush=True)
+        return False
+    return True
+
+
+async def sign_in(page: Page, directory: str, tag: str, username: str,
+                  password: str) -> bool:
+    """Type the credentials on whatever login page the gateway left us on.
+
+    Important: do *not* navigate away first. Passing the second gateway leaves
+    the browser on Keycloak's `login-actions` URL, already authorised to show the
+    "Søg efter lokalt login" page. Going back to /unilogin throws that away.
+    """
+    for step in range(1, 15):
+        if await page.query_selector("input[type='password']"):
+            print(f"    step{step}: password form", flush=True)
+            break
+        if await _at_idp_search(page):
+            print(f"    step{step}: IdP search page", flush=True)
+            await page.screenshot(path=os.path.join(directory, f"{tag}_idp.png"),
                                   full_page=True)
-            submitted = await _fill_and_submit_credentials(page, username, password)
-            print(f"    step{step}: submitted={submitted}", flush=True)
-            await page.wait_for_timeout(8000)
-            continue
-
-        if await page.query_selector("#ans"):
-            state = await answer_challenge(page, directory, f"{tag}s{step}")
-            if state in ("dead", "gone", "no-media", "no-reading"):
-                print(f"    step{step}: gateway {state}", flush=True)
+            if not await _submit_idp_search(page, username):
                 return False
+            await page.wait_for_timeout(4500)
             continue
-
-        if submitted:
-            # we are past the credentials; either we are in, or we are asked
-            # for something else — the caller decides
-            return True
-
+        if await _fill_and_submit_credentials(page, username, password):
+            print(f"    step{step}: submitted a credential form", flush=True)
+            await page.wait_for_timeout(9000)
+            break
+        if await page.query_selector("#ans"):
+            state = await answer_challenge(page, directory, f"{tag}x{step}")
+            if state != "passed":
+                print(f"    step{step}: late gateway {state}", flush=True)
+                return False
+            await page.wait_for_timeout(2500)
+            continue
         if await _click_local_login(page):
             print(f"    step{step}: clicked Lokalt login", flush=True)
-            await page.wait_for_timeout(3500)
-            # Passing the bot-check in front of that POST replays it as a GET,
-            # which Keycloak rejects; retrying in the same session just loops, so
-            # start a fresh chain instead.
-            try:
-                body = await page.inner_text("body")
-            except Exception:
-                body = ""
-            if "Der skete en fejl" in body or "Uventet fejl" in body:
-                print(f"    step{step}: Keycloak rejected the replay; restarting",
-                      flush=True)
-                return False
+            await page.wait_for_timeout(4500)
             continue
+        try:
+            body = (await page.inner_text("body")).replace("\n", " ")
+        except Exception:
+            body = ""
+        print(f"    step{step}: nothing to do ({body[:70]!r})", flush=True)
+        return False
 
-        await page.screenshot(path=os.path.join(directory, f"{tag}_stuck.png"),
-                              full_page=True)
-        print(f"    step{step}: restarting from {page.url[:60]}", flush=True)
-        await asyncio.sleep(RESTART_PAUSE)
-        await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
-        await page.wait_for_timeout(1500)
-        submitted = False
-    return False
+    await page.screenshot(path=os.path.join(directory, f"{tag}_afterlogin.png"),
+                          full_page=True)
+    with open(os.path.join(directory, f"{tag}_afterlogin.html"), "w") as handle:
+        handle.write(await page.content())
+    try:
+        text = (await page.inner_text("body")).replace("\n", " | ")
+    except Exception:
+        text = ""
+    print(f"    after login url={page.url[:80]}", flush=True)
+    print(f"    after login text={text[:160]!r}", flush=True)
+    return True
 
 
 async def open_student(page: Page, directory: str, tag: str, username: str,
                        password: str) -> bool:
-    await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
-    if not await reach_credentials(page, directory, tag, username, password):
-        return False
+    """Pass the gateways, save the trusted session, then sign in.
 
-    if await page.query_selector("#ans"):
-        state = await answer_challenge(page, directory, f"{tag}post")
-        if state != "passed":
+    Once the gateway has accepted one answer, its cookie stays trusted. Saving it
+    means a later run can skip the captcha entirely and retry only the step that
+    actually failed, which is what makes the whole thing converge.
+    """
+    trusted_path = os.path.join(directory, "trusted_state.json")
+
+    if os.path.exists(trusted_path):
+        try:
+            await page.context.add_cookies(
+                json.load(open(trusted_path)).get("cookies", []))
+            print("    reusing trusted gateway cookies", flush=True)
+        except Exception:
+            pass
+    else:
+        if not await pass_gateways(page, directory, tag):
             return False
-        await page.wait_for_timeout(3000)
+        try:
+            state = await page.context.storage_state()
+            with open(trusted_path, "w") as handle:
+                json.dump(state, handle)
+            print("    saved trusted gateway state", flush=True)
+        except Exception:
+            pass
+
+    if not await sign_in(page, directory, tag, username, password):
+        return False
 
     await page.goto(STUDENT, wait_until="domcontentloaded", timeout=60000)
     await page.wait_for_timeout(4000)
@@ -399,4 +537,9 @@ async def open_student(page: Page, directory: str, tag: str, username: str,
                           full_page=True)
     with open(os.path.join(directory, f"{tag}_student.html"), "w") as handle:
         handle.write(await page.content())
+    try:
+        print(f"    student url={page.url[:80]}", flush=True)
+        print(f"    student text={(await page.inner_text('body'))[:150]!r}", flush=True)
+    except Exception:
+        pass
     return "unilogin" not in page.url and "security-check" not in page.url

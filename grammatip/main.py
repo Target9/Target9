@@ -68,10 +68,10 @@ async def run(args) -> int:
     directory = args.out
     os.makedirs(directory, exist_ok=True)
     log(f"artifacts -> {directory}")
+    log(f"pacing submissions {browser.SUBMIT_INTERVAL:.0f}s apart")
 
     async with async_playwright() as playwright:
         engine = await playwright.chromium.launch(headless=args.headless)
-        failures = 0
         for attempt in range(1, args.attempts + 1):
             # A session whose token has died stays dead, so each attempt gets a
             # clean context; that also gives a fresh set of gateway cookies.
@@ -94,13 +94,10 @@ async def run(args) -> int:
                 log(f"attempt {attempt} failed: {type(exc).__name__} {exc}")
             finally:
                 if not success:
-                    failures += 1
                     try:
                         await context.close()
                     except Exception:
                         pass
-            # occasional token deaths are expected; nothing to wait for
-            await asyncio.sleep(1)
         await engine.close()
     log("gave up")
     return 1
