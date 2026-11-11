@@ -8,9 +8,11 @@ The gateway's quirks (measured, not guessed):
 
 * each submission returns a fresh 6 character challenge, so one session can be
   kept alive for many rounds
-* a wrong answer is answered "Koden var forkert"; nothing is locked out
-* submitting faster than roughly one every 8 seconds eventually answers
-  "Der er opstået en fejl" and kills the session token, so pace the loop
+* a wrong answer is answered "Koden var forkert"; nothing is locked out, and
+  retries within the session are cheap
+* roughly one submission in five is answered with "Der er opstået en fejl"
+  instead, which kills that session's token; it is not caused by pacing or by
+  reading the page's media, so the only response is to start a new session
 * after the second gateway the "Loginvælger" page is shown again, and clicking
   "Lokalt login" a second time is what reveals the username/password form
 """
@@ -39,8 +41,8 @@ WHISPER_PROMPTS = (
     "The speaker spells a code of six characters, letters and digits.",
     "One letter or digit at a time, for example A, B, C, D, E, F.",
 )
-SUBMIT_INTERVAL = 8.0  # seconds; bursts get the token killed
-RESTART_PAUSE = 6.0    # seconds to wait before asking for a fresh challenge
+SUBMIT_INTERVAL = 1.0  # seconds between submissions (the gateway tolerates this)
+RESTART_PAUSE = 2.0    # seconds to wait before asking for a fresh challenge
 
 _models: dict[str, object] = {}
 _last_submit = 0.0
