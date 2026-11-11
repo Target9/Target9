@@ -1,0 +1,5 @@
+__pycache__/
+artifacts/
+*.pyc
+*.mp3
+*.wav
