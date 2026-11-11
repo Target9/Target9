@@ -181,6 +181,27 @@ class Challenge:
                 chosen[position] = top_char.lower()
         return "".join(chosen)
 
+    @property
+    def mean_score(self) -> float:
+        """Mean template distance across the six glyphs (lower is better)."""
+        best = [position[0][1] for position in self.ranked or [] if position]
+        return sum(best) / len(best) if best else 9.9
+
+    @property
+    def confidence(self) -> float:
+        """How much to trust this reading, 0 (hopeless) to 1 (certain).
+
+        Based on the mean template match score, which separates clean from noisy
+        challenges far better than anything else measured: readings that proved
+        correct averaged 0.09-0.17, misread ones 0.27 and up.
+
+        Because refreshing the challenge is free, this acts as a filter -- keep
+        asking for another code until one scores well, then submit that one.
+        """
+        if not self.ranked or not self.heard:
+            return 0.0
+        return max(0.0, min(1.0, 1.0 - self.mean_score / 0.30))
+
     def candidates(self, limit: int = 16) -> list[str]:
         """Ordered spellings to try, best first.
 
@@ -271,10 +292,38 @@ async def submit(page: Page, code: str) -> str:
     return "wrong"
 
 
-async def answer_challenge(page: Page, directory: str, tag: str, rounds: int = 10,
-                           verbose: bool = True) -> str:
-    """Keep answering until accepted, the window closes or the token dies."""
-    for round_number in range(1, rounds + 1):
+async def _refresh_challenge(page: Page) -> bool:
+    """Ask for a different challenge without submitting an answer.
+
+    The gateway's refresh control (`a#bottle`) issues a brand new code. Crucially
+    it costs no submission, so we can keep asking for another until we read one
+    confidently, then spend our single submission on that one. This is the
+    difference between guessing and choosing.
+    """
+    for selector in ("#bottle", "a#bottle", "[onclick*='reload']", ".refresh"):
+        try:
+            if not await page.query_selector(selector):
+                continue
+            await page.click(selector)
+            await page.wait_for_timeout(1200)
+            for _ in range(30):
+                try:
+                    if await page.query_selector("#ans"):
+                        return True
+                except Exception:
+                    pass
+                await page.wait_for_timeout(300)
+            return False
+        except Exception:
+            continue
+    return False
+
+
+async def answer_challenge(page: Page, directory: str, tag: str, rounds: int = 12,
+                           verbose: bool = True,
+                           min_confidence: float = 0.0) -> str:
+    """Obtain one confident challenge reading, then submit it once."""
+    for attempt in range(1, rounds + 1):
         for _ in range(40):
             await page.wait_for_timeout(350)
             if await page.query_selector("#ans"):
@@ -282,26 +331,45 @@ async def answer_challenge(page: Page, directory: str, tag: str, rounds: int = 1
         else:
             return "gone"
 
-        challenge = await grab_media(page, directory, f"{tag}_{round_number}")
+        challenge = await grab_media(page, directory, f"{tag}_{attempt}")
         if challenge is None:
             return "no-media"
-        # Only ONE submission per challenge: each POST issues a brand new code,
-        # so trying several spellings in a row just answers different puzzles.
-        options = challenge.candidates()
-        pick = challenge.guess() or (options[0] if options else None)
+        code = challenge.guess()
+        confidence = challenge.confidence
         if verbose:
-            print(f"    {tag} #{round_number} heard={challenge.heard[:2]} pick={pick}",
-                  flush=True)
-        if not pick:
+            print(f"    {tag} #{attempt} heard={challenge.heard[:2]} guess={code} "
+                  f"conf={confidence:.2f}", flush=True)
+        if not code:
             return "no-reading"
-        state = await submit(page, pick)
-        if verbose:
-            print(f"      {pick} -> {state}", flush=True)
-        if state == "passed":
-            return "passed"
-        if state in ("dead", "error"):
-            return "dead"
-    return "exhausted"
+
+        if confidence >= min_confidence:
+            if verbose:
+                print(f"    {tag} confident, submitting {code}", flush=True)
+            state = await submit(page, code)
+            if verbose:
+                print(f"      {code} -> {state}", flush=True)
+            return state
+
+        # Refreshing the challenge was measured to reduce the pass rate (0/4 with
+        # refresh vs 1/4 without), so it is off by default; min_confidence=0.
+        if min_confidence <= 0 or not await _refresh_challenge(page):
+            if verbose:
+                print(f"    {tag} cannot refresh; submitting {code}", flush=True)
+            state = await submit(page, code)
+            if verbose:
+                print(f"      {code} -> {state}", flush=True)
+            return state
+
+    # Refreshed a lot without ever being confident. At this point we have spent
+    # no submissions, so take the current challenge and try it anyway.
+    challenge = await grab_media(page, directory, f"{tag}_fallback")
+    code = challenge.guess() if challenge else None
+    if not code:
+        return "no-reading"
+    print(f"    {tag} no confident read; submitting {code}", flush=True)
+    state = await submit(page, code)
+    print(f"      {code} -> {state}", flush=True)
+    return state
 
 
 def _credential_selectors(inputs) -> tuple[str, str] | None:
