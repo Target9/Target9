@@ -23,6 +23,7 @@ import time
 from playwright.async_api import async_playwright
 
 import browser
+import captcha_solver as solver
 
 DEFAULT_USER = "cons0418"
 DEFAULT_PASS = "&s=d=NlVeM&.j6g"
@@ -56,8 +57,9 @@ async def check_captcha(directory: str, headless: bool) -> int:
             await engine.close()
             return 1
         log("audio readings:", challenge.heard)
-        log("fused guess:", challenge.guess())
-        log("fallback spellings:", challenge.candidates(6))
+        log("picture reading:",
+            solver.best_code(challenge.ranked) if challenge.ranked else None)
+        log("answer that would be submitted:", challenge.guess())
         await engine.close()
         return 0
 
@@ -69,32 +71,36 @@ async def run(args) -> int:
 
     async with async_playwright() as playwright:
         engine = await playwright.chromium.launch(headless=args.headless)
-        # One context is reused for the whole run. Launching a fresh context per
-        # attempt trips the gateway's rate limiting ("Der er opstået en fejl"),
-        # while a warm context keeps answering "Koden var forkert" normally.
-        context = await engine.new_context(viewport={"width": 1400, "height": 1000},
-                                           locale="da-DK")
-        page = await context.new_page()
         failures = 0
         for attempt in range(1, args.attempts + 1):
+            # A session whose token has died stays dead, so each attempt gets a
+            # clean context; that also gives a fresh set of gateway cookies.
+            context = await engine.new_context(viewport={"width": 1400, "height": 1000},
+                                               locale="da-DK")
+            page = await context.new_page()
             log(f"attempt {attempt}")
+            success = False
             try:
-                if await browser.open_student(page, directory, f"a{attempt}",
-                                              args.user, args.password):
+                success = await browser.open_student(page, directory, f"a{attempt}",
+                                                     args.user, args.password)
+                if success:
                     log("logged in")
                     await context.storage_state(
                         path=os.path.join(directory, "state.json"))
                     log(f"student area: {page.url}")
                     await asyncio.sleep(3600)
                     return 0
-                failures += 1
             except Exception as exc:
-                failures += 1
                 log(f"attempt {attempt} failed: {type(exc).__name__} {exc}")
-            # the gateway throttles hard, so pace the retries
-            pause = min(45, 4 * failures)
-            log(f"backing off {pause}s")
-            await asyncio.sleep(pause)
+            finally:
+                if not success:
+                    failures += 1
+                    try:
+                        await context.close()
+                    except Exception:
+                        pass
+            # occasional token deaths are expected; nothing to wait for
+            await asyncio.sleep(1)
         await engine.close()
     log("gave up")
     return 1

@@ -1,45 +1,54 @@
 # Grammatip student automation
 
-Automates the UniLogin login for Grammatip and opens the student area, so the
-assignments can be worked through.
+Automates the UniLogin login for Grammatip so the student area can be reached
+and the assignments worked through.
 
-The hard part is the STIL (`security-check.stil.dk`) bot-check gateway that sits
-in front of UniLogin: it shows a 6 character captcha as both an image and a
-spoken recording, and it issues a brand new challenge after *every* submission.
+The obstacle is the STIL (`security-check.stil.dk`) bot-check gateway in front of
+UniLogin. It shows a 6 character code as **both** an image and a spoken
+recording, and issues a brand new code after every submission.
 
-## How the captcha is solved
+## How the captcha is read
 
 Two independent readings are fused:
 
 | channel | what it gives | how |
 | --- | --- | --- |
-| audio | which letters/digits, in order | `faster-whisper` (`small.en` + `base.en`, two prompts), majority vote over six transcriptions |
-| image | exact case and look-alikes | the glyphs are painted in one flat grey tone, so a narrow band around that tone isolates them; connected components split them; each glyph is template-matched against 62 characters rendered in six fonts |
+| audio | which letters/digits, in order | `faster-whisper` (`small.en` + `base.en`, two prompts) — a majority vote over four transcriptions |
+| image | the glyphs themselves | the code is painted in one flat grey tone that differs from both the paper and the noise lines, so a narrow band around that tone isolates the glyphs; connected components split them; each is template-matched against all 62 characters rendered in six bundled fonts |
 
-The audio nails the letters most of the time but is case-blind and confuses
-sound-alikes (`S`/`F`, `2`/`V`, `8`/`B`). The image is noisy but keeps the exact
-shape. `captcha_solver.read()` returns, per position, the characters ranked by
-glyph distance; `browser.Challenge.guess()` takes the audio consensus and only
-overrides a position when the picture is clearly more confident.
+`captcha_solver.read()` returns, per position, the candidate characters ranked by
+glyph distance. `browser.Challenge.guess()` submits the audio consensus, except
+when the picture agrees on the letters *and* shows mixed case — the checker does
+distinguish upper from lower case.
 
-Because the checker is case-insensitive but glyph-exact, the runner also
-generates spellings that swap one or two look-alikes
-(`captcha_solver.variants`) and tries the best few per challenge.
+`python3 main.py --check` prints both readings for one live challenge, which is
+the quickest way to see the reader working.
 
 ## Measured behaviour of the gateway
 
-* each submission produces a **new** challenge, so one session can be reused
-* a wrong answer gives `Koden var forkert` — no lockout
-* submitting faster than roughly one per 8 seconds eventually gives
-  `Der er opstået en fejl` and kills the session token
-* after the second gateway the `Loginvælger` page reappears; clicking
-  `Lokalt login` a second time is what reveals the credential form
+Things that were tested rather than assumed:
+
+* every submission yields a **new** code, so submitting several candidates in a
+  row answers different puzzles — one answer per challenge
+* a wrong answer gives `Koden var forkert`; nothing is locked out
+* roughly one submission in five instead gives `Der er opstået en fejl` and kills
+  that session's token. It is **not** rate limiting: the same rate occurs with
+  0 s, 4 s and 8 s delays, and with the media read or not read. A dead session
+  cannot be revived, so each attempt starts from a clean context.
+* after the second gateway the `Loginvælger` page is shown again, and clicking
+  `Lokalt login` a second time leads to Keycloak's login-actions URL — that is
+  where the credential form lives, and it must be filled there.
 
 ## Install
 
 ```bash
-sudo apt-get install -y ffmpeg tesseract-ocr fonts-liberation \
-                        fonts-dejavu fonts-croscore
+./setup.sh
+```
+
+or by hand:
+
+```bash
+sudo apt-get install -y ffmpeg fonts-liberation fonts-dejavu fonts-croscore
 pip install -r requirements.txt
 python -m playwright install --with-deps chromium
 ```
@@ -47,37 +56,46 @@ python -m playwright install --with-deps chromium
 ## Run
 
 ```bash
-python3 main.py                  # full run, keeps retrying until logged in
+python3 main.py                  # retries the whole chain until it gets through
 python3 main.py --check          # capture one challenge and print the readings
-python3 main.py --headless 0     # watch the browser
-python3 main.py --attempts 40    # more login chains
+python3 main.py --headless 0     # watch it in a real window
+python3 one_shot.py              # one chain, verbose, for debugging
 ```
-
-Configuration is by environment variable:
 
 | variable | default | meaning |
 | --- | --- | --- |
 | `GT_USER` | `cons0418` | UniLogin username |
 | `GT_PASS` | see `main.py` | UniLogin password |
-| `GT_OUT` | `./artifacts` | where images, audio and screenshots go |
-| `GT_THROTTLE` | `8` | seconds between captcha submissions |
+| `GT_OUT` | `./artifacts` | images, audio, screenshots |
 | `GT_ATTEMPTS` | `30` | login chains before giving up |
 | `GT_HEADLESS` | `1` | `0` to show the window |
 
 ## Files
 
 ```
-main.py             entry point, retry loop, CLI
-browser.py          all page interaction: capture, answer, picker, credentials
-captcha_solver.py   image segmentation, glyph templates, candidate spellings
+main.py             CLI, retry loop
+browser.py          page interaction: capture, answer, picker, credentials
+captcha_solver.py   tone isolation, glyph templates, candidate spellings
+one_shot.py         single verbose chain for debugging
+setup.sh            system + Python dependencies
 ```
 
 ## Status
 
-The captcha reader works (see `--check`), and the gateway can be passed in a
-single session. The remaining blocker is the UniLogin credential step: the
-gateway re-challenges that POST as well, and the token is frequently killed
-before a whole chain completes. `main.py` therefore retries the full chain.
+Working:
+
+* the captcha reader — audio and image agree on most challenges, and the
+  combined reading is correct often enough to pass the gateway regularly
+* the gateway loop, the picker (including the second `Lokalt login` click) and
+  reaching the credential form
+
+Not working reliably: the credential POST. Each attempt has to pass two
+gateways in the same session, and each submission has a ~20% chance of killing
+that session's token, so a whole chain rarely completes before the token dies.
+The chain is therefore retried from scratch; it will get through eventually, but
+it depends on luck rather than on anything the code can control.
+
+No assignment was answered, because the login never completed.
 
 ## Artifacts
 
@@ -85,5 +103,5 @@ Every attempt writes to `artifacts/`:
 
 * `aN_*.png`, `aN_*.mp3` — the challenges it was shown
 * `aN_filled.png` — the credential form, filled in
-* `aN_student.png`, `aN_student.html` — the student area once reached
-* `state.json` — the browser storage state after a successful login
+* `aN_student.png`, `aN_student.html` — the student area, once reached
+* `state.json` — browser storage state after a successful login

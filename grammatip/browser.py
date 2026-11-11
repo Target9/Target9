@@ -98,7 +98,6 @@ def read_audio(mp3_path: str) -> tuple[list[str], dict[str, int]]:
 
 class Challenge:
     """One captcha: where its media was saved and what we read from it."""
-
     def __init__(self, image_path: str | None, audio_path: str | None):
         self.image_path = image_path
         self.audio_path = audio_path
@@ -126,49 +125,55 @@ class Challenge:
         return self.heard[0]
 
     def guess(self) -> str | None:
-        """Audio consensus, with per-position corrections from the image."""
-        base = self.consensus
-        if not base:
+        """The answer to submit.
+
+        The two channels agree on the letters most of the time, and when they do
+        the picture supplies the exact upper/lower case, which the checker does
+        distinguish. When they disagree we trust the audio consensus, because a
+        mis-segmented glyph can corrupt an otherwise correct reading.
+        """
+        consensus = self.consensus
+        if not consensus:
             return None
-        if not self.ranked:
-            return base
-        chosen = list(base)
-        for position, ranked in enumerate(self.ranked):
-            if not ranked:
-                continue
-            top_char, top_score = ranked[0]
-            if top_char.upper() == chosen[position].upper():
-                continue
-            audio_score = next(
-                (score for char, score in ranked if char.upper() == chosen[position].upper()),
-                float("inf"),
-            )
-            # only override when the picture is clearly more confident
-            if top_score * 1.5 < audio_score:
-                chosen[position] = top_char
-        return "".join(chosen)
+        if self.ranked:
+            picture = solver.best_code(self.ranked)
+            if (len(picture) == len(consensus)
+                    and picture.upper() == consensus.upper()
+                    and picture != picture.upper()):
+                # same letters, and the picture sees mixed case: use it
+                return picture
+        return consensus
 
     def candidates(self, limit: int = 16) -> list[str]:
-        """Ordered spellings to try, best first."""
+        """Ordered spellings to try, best first.
+
+        Only the first is actually submitted per challenge (each submission
+        issues a new code), so this mainly documents what we would try next.
+        """
         ordered: list[str] = []
-        guess = self.guess()
-        if guess:
-            ordered.append(guess)
-        ordered.extend(code for code, _ in sorted(self.votes.items(),
-                                                  key=lambda item: -item[1]))
-        ordered.extend(self.heard)
-        for base in list(ordered)[:2]:
-            ordered.extend(solver.variants(base, limit))
-            if self.ranked:
-                for code in solver.top_codes(self.ranked, limit):
-                    if sum(1 for a, b in zip(code, base) if a.upper() != b.upper()) <= 2:
-                        ordered.append(code)
+        consensus = self.consensus
+        if consensus:
+            ordered.append(consensus)
+        ordered.extend(self._letter_readings())
+        if consensus:
+            ordered.extend(solver.variants(consensus, limit))
         seen, unique = set(), []
         for code in ordered:
             if code and len(code) == 6 and code.upper() not in seen:
                 seen.add(code.upper())
                 unique.append(code)
         return unique[:limit]
+
+    def _letter_readings(self) -> list[str]:
+        """Audio readings, most agreed-upon first."""
+        ordered: list[str] = []
+        if self.votes:
+            ordered.extend(code for code, _ in sorted(self.votes.items(),
+                                                      key=lambda item: -item[1]))
+        for code in self.heard:
+            if code not in ordered:
+                ordered.append(code)
+        return ordered
 
 
 async def grab_media(page: Page, directory: str, tag: str) -> Challenge | None:
@@ -243,25 +248,22 @@ async def answer_challenge(page: Page, directory: str, tag: str, rounds: int = 1
         challenge = await grab_media(page, directory, f"{tag}_{round_number}")
         if challenge is None:
             return "no-media"
+        # Only ONE submission per challenge: each POST issues a brand new code,
+        # so trying several spellings in a row just answers different puzzles.
         options = challenge.candidates()
+        pick = challenge.guess() or (options[0] if options else None)
         if verbose:
-            print(f"    {tag} #{round_number} heard={challenge.heard[:2]} "
-                  f"options={options[:3]}", flush=True)
-        if not options:
+            print(f"    {tag} #{round_number} heard={challenge.heard[:2]} pick={pick}",
+                  flush=True)
+        if not pick:
             return "no-reading"
-
-        # try the best few spellings of this challenge, then move on
-        for code in options[:4]:
-            state = await submit(page, code)
-            if verbose:
-                print(f"      {code} -> {state}", flush=True)
-            if state == "passed":
-                return "passed"
-            if state == "dead":
-                return "dead"
-            if await page.query_selector("#ans"):
-                continue
-            break
+        state = await submit(page, pick)
+        if verbose:
+            print(f"      {pick} -> {state}", flush=True)
+        if state == "passed":
+            return "passed"
+        if state in ("dead", "error"):
+            return "dead"
     return "exhausted"
 
 
@@ -299,55 +301,20 @@ async def _click_local_login(page: Page) -> bool:
     return False
 
 
-async def reach_credentials(page: Page, directory: str, tag: str, username: str,
-                            password: str, steps: int = 20) -> bool:
-    """Drive the gateway/picker until the credential form is filled in."""
-    for step in range(1, steps + 1):
-        fields = _credential_selectors(await _inputs(page))
-        if fields:
-            user_selector, password_selector = fields
-            await page.fill(user_selector, username)
-            await page.fill(password_selector, password)
-            return True
-
-        if await page.query_selector("#ans"):
-            state = await answer_challenge(page, directory, f"{tag}s{step}")
-            if state in ("dead", "gone", "no-media", "no-reading"):
-                print(f"    step{step}: gateway {state}", flush=True)
-                return False
-            continue
-
-        if await _click_local_login(page):
-            print(f"    step{step}: clicked Lokalt login", flush=True)
-            await page.wait_for_timeout(3500)
-            # Passing the bot-check for that POST replays it as a GET, which
-            # Keycloak rejects ("Der skete en fejl"). Going back and clicking
-            # again succeeds, because the gateway now trusts the session.
-            try:
-                body = await page.inner_text("body")
-            except Exception:
-                body = ""
-            if "Der skete en fejl" in body or "Uventet fejl" in body:
-                print(f"    step{step}: Keycloak rejected the replay, retrying",
-                      flush=True)
-                await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
-                await page.wait_for_timeout(1500)
-            continue
-
-        # The dead-token page shows neither a captcha nor a picker. Restarting
-        # the entry point issues a fresh challenge for this session.
-        await page.screenshot(path=os.path.join(directory, f"{tag}_stuck.png"),
-                              full_page=True)
-        print(f"    step{step}: restarting from {page.url[:60]}", flush=True)
-        await asyncio.sleep(RESTART_PAUSE)
-        await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
-        await page.wait_for_timeout(1500)
-    return False
-
-
-async def _submit_credentials(page: Page) -> bool:
+async def _fill_and_submit_credentials(page: Page, username: str, password: str) -> bool:
+    """Type the credentials into whatever login form is on the page and submit."""
+    fields = _credential_selectors(await _inputs(page))
+    if not fields:
+        return False
+    user_selector, password_selector = fields
+    try:
+        await page.fill(user_selector, username)
+        await page.fill(password_selector, password)
+    except Exception:
+        return False
     for selector in ("input[type='submit']", "button[type='submit']",
-                     "button:has-text('Log ind')", "button:has-text('Fortsæt')"):
+                     "button:has-text('Log ind')", "button:has-text('Fortsæt')",
+                     "button:has-text('Næste')"):
         try:
             await page.click(selector, timeout=3500)
             return True
@@ -356,16 +323,58 @@ async def _submit_credentials(page: Page) -> bool:
     return False
 
 
+async def reach_credentials(page: Page, directory: str, tag: str, username: str,
+                            password: str, steps: int = 25) -> bool:
+    """Walk the gateway and the UniLogin picker until we are signed in.
+
+    Passing the bot-check in front of the "Lokalt login" POST makes Keycloak land
+    on its login-actions URL, which is where the credential form appears. So the
+    loop does not stop at "a form exists": it fills and submits it in place.
+    """
+    submitted = False
+    for step in range(1, steps + 1):
+        fields = _credential_selectors(await _inputs(page))
+        if fields and not submitted:
+            print(f"    step{step}: credential form", flush=True)
+            await page.screenshot(path=os.path.join(directory, f"{tag}_filled.png"),
+                                  full_page=True)
+            submitted = await _fill_and_submit_credentials(page, username, password)
+            print(f"    step{step}: submitted={submitted}", flush=True)
+            await page.wait_for_timeout(8000)
+            continue
+
+        if await page.query_selector("#ans"):
+            state = await answer_challenge(page, directory, f"{tag}s{step}")
+            if state in ("dead", "gone", "no-media", "no-reading"):
+                print(f"    step{step}: gateway {state}", flush=True)
+                return False
+            continue
+
+        if submitted:
+            # we are past the credentials; either we are in, or we are asked
+            # for something else — the caller decides
+            return True
+
+        if await _click_local_login(page):
+            print(f"    step{step}: clicked Lokalt login", flush=True)
+            await page.wait_for_timeout(3500)
+            continue
+
+        await page.screenshot(path=os.path.join(directory, f"{tag}_stuck.png"),
+                              full_page=True)
+        print(f"    step{step}: restarting from {page.url[:60]}", flush=True)
+        await asyncio.sleep(RESTART_PAUSE)
+        await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
+        await page.wait_for_timeout(1500)
+        submitted = False
+    return False
+
+
 async def open_student(page: Page, directory: str, tag: str, username: str,
                        password: str) -> bool:
     await page.goto(UNILOGIN, wait_until="domcontentloaded", timeout=60000)
     if not await reach_credentials(page, directory, tag, username, password):
         return False
-    await page.screenshot(path=os.path.join(directory, f"{tag}_filled.png"),
-                          full_page=True)
-    if not await _submit_credentials(page):
-        return False
-    await page.wait_for_timeout(8000)
 
     if await page.query_selector("#ans"):
         state = await answer_challenge(page, directory, f"{tag}post")

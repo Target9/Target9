@@ -88,6 +88,9 @@ def _normalise(patch: np.ndarray) -> np.ndarray | None:
     if len(ys) == 0:
         return None
     crop = patch[ys.min():ys.max() + 1, xs.min():xs.max() + 1].astype(np.float32)
+    # patches are 0..255 masks, templates are 0..1
+    if crop.max() > 1.0:
+        crop /= 255.0
     return cv2.resize(crop, _GLYPH_SIZE, interpolation=cv2.INTER_AREA)
 
 
@@ -210,14 +213,16 @@ def read(image_path: str, audio_readings: list[str], debug: bool = False):
         candidates = set()
         for reading in audio_readings:
             candidates.update(_candidates(reading, position))
-        ranked.append(_score(patches[position], list(candidates)))
+        if not candidates:
+            candidates = set(ALPHABET)
+        ranked.append(_score(patches[position], sorted(candidates)))
         if debug:
             print(f"  pos{position}: " + " ".join(f"{c}:{d:.0f}" for c, d in ranked[position][:6]))
     return ranked
 
 
 def best_code(ranked) -> str:
-    return "".join(position[0][0] for position in ranked)
+    return "".join(position[0][0] if position else "?" for position in ranked)
 
 
 def top_codes(ranked, limit: int = 12) -> list[str]:
