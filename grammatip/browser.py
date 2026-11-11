@@ -358,6 +358,17 @@ async def reach_credentials(page: Page, directory: str, tag: str, username: str,
         if await _click_local_login(page):
             print(f"    step{step}: clicked Lokalt login", flush=True)
             await page.wait_for_timeout(3500)
+            # Passing the bot-check in front of that POST replays it as a GET,
+            # which Keycloak rejects; retrying in the same session just loops, so
+            # start a fresh chain instead.
+            try:
+                body = await page.inner_text("body")
+            except Exception:
+                body = ""
+            if "Der skete en fejl" in body or "Uventet fejl" in body:
+                print(f"    step{step}: Keycloak rejected the replay; restarting",
+                      flush=True)
+                return False
             continue
 
         await page.screenshot(path=os.path.join(directory, f"{tag}_stuck.png"),
