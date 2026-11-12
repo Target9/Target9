@@ -1,7 +1,7 @@
 # 7. Manuskript – guideline til fremlæggelsen
 
 > **Sådan bruger I manuskriptet:** Det er en **guideline**, ikke noget, I skal læse op. Øv jer med det, til I kan sige det med jeres egne ord. Til prøven har I kun **stikordene** (de fede ord) med på et kort eller i talenoterne.
-> **Samlet tid:** ca. 17 minutter + spørgsmål. Tiderne i parentes er vejledende.
+> **Samlet tid:** ca. 20 minutter + spørgsmål. Tiderne i parentes er vejledende.
 > **P1** = biologi, **P2** = fysik, **P3** = kemi, **P4** = geografi. Slide-numrene passer til `05-powerpoint/FFFO-praesentation.pptx`.
 
 ---
@@ -89,7 +89,7 @@
 
 ---
 
-## FYSIK (ca. 4:00) · P2
+## FYSIK (ca. 4:30) · P2
 
 ### Slide 9 – Lys: rødt og infrarødt (0:45)
 
@@ -108,32 +108,35 @@
 
 **Stikord:** LED + fotodiode · absorption · Hb vs. HbO₂ · DC konstant · AC pulserer · puls = 60/T · rødt/IR-forhold · arterieblod
 
-### Slide 11 – Ugeforsøget: metode (0:30)
+### Slide 11 – Ugeforsøget: metode (0:45)
 
-> "I vores ugeforsøg målte vi puls og iltmætning på alle fire i gruppen: først i **hvile**, så efter **3 minutters trappeløb**, og derefter hvert halve minut i **5 minutter**, mens vi restituerede. Vi testede også fejlkilder: **bevægelse, kolde fingre, neglelak og lys udefra**."
+> "Hos raske mennesker ændrer **iltmætningen sig næsten ikke**, heller ikke når man løber. Et simpelt før-og-efter-forsøg ville derfor bare give det samme tal hver gang. Vi har i stedet lavet et ugeforsøg i to dele.
+> I **del 1** byggede vi en **pulsmåler med mobilkameraet**: lommelygten tændt og fingeren over kameraet. Så kunne vi måle, hvor meget lys der slipper igennem i hvert billede.
+> I **del 2** førte vi **måledagbog i 5 dage**: puls og iltmætning fire gange om dagen, om morgenen, i skolen, efter aktivitet og om aftenen. Hver af os lavede også **to hemmelige fejlmålinger**, fx med neglelak eller kold finger, og en anden skrev facit ned. Så kunne vi teste, om en AI-model kan finde dem, præcis som med testbillederne i biologi."
 
-**Stikord:** hvile · 3 min arbejde · restitution 5 min · fejlkilder
+**Stikord:** SpO₂ ændrer sig ikke → del 1: mobil + lys · del 2: dagbog 5 dage × 4 · 2 hemmelige fejlmålinger · blindtest
 
-### Slide 12 – Resultater (0:45)
+### Slide 12 – Resultater (1:00)
 
-> "Her ser I resultaterne. Pulsen steg fra i gennemsnit **__ til __** slag i minuttet og var tilbage nær hvile efter ca. **__ minutter**.
-> Iltmætningen ændrede sig kun fra **__ % til __ %**. Bemærk, at y-aksen starter ved 90 %, så den lille ændring ser større ud, end den er. Ændringen ligger inden for apparatets usikkerhed på **±2 procentpoint**.
-> Ved neglelak og kolde fingre fik vi [beskriv]. Hvorfor ilten ikke falder mere, forklarer [P3] om lidt."
+> "I **del 1** målte mobilen næsten samme puls som pulsoximeteret, i gennemsnit kun **__ slag** forskel. Og se på farverne: **Blåt lys** blev næsten helt absorberet af fingeren, mens **rødt lys** slap bedst igennem. Absorptionen afhænger altså af **bølgelængden**, og det er derfor, pulsoximeteret bruger rødt og infrarødt lys. Mobilen har ikke infrarødt lys, så den kan **kun måle puls**, ikke ilt.
+> I **del 2** svingede pulsen fra ca. **__** om morgenen til **__** efter aktivitet. Men iltmætningen lå stabilt på **97–98 %** i alle situationer. Bemærk, at y-aksen starter ved 90 %."
 
-**Stikord:** puls __ → __ · restitution __ min · SpO₂ __ → __ · y-akse fra 90 · ±2 · fejlkilder
+**Stikord:** mobil ≈ oximeter (__ slag) · blå absorberes, rød slipper igennem · bølgelængde · ingen IR → ingen ilt · puls __ → __ · SpO₂ stabil 97–98 · y-akse fra 90
+**Demo (valgfri):** Vis analyseværktøjet med en af jeres videoer.
 
-### Slide 13 – AI og afvigelser (0:45)
+### Slide 13 – AI-blindtest (1:00)
 
-> "Hvordan kan AI bruge sådanne data? Vi lavede en simpel **afvigelsesmodel** i Excel: Ud fra klassens hvilemålinger fandt vi **middelværdien og standardafvigelsen**. Målinger uden for **middel ± 2 standardafvigelser** bliver markeret som afvigelser. Den fangede fx vores neglelak-måling.
-> Men den markerede også pulsen lige efter trappeløb, som jo er helt normal. Rigtig AI, fx i et **smartwatch**, lærer **din personlige normal** og kombinerer med **bevægelsessensoren**. I Apple Heart Study med over 400.000 deltagere kunne uret opdage **uregelmæssig hjerterytme**.
-> Men også her er der **bias**: Et stort studie viste, at pulsoximetre oftere overser iltmangel hos personer med **mørk hud**, fordi melanin også absorberer lys."
+> "Kunne AI'en så finde vores **8 hemmelige fejlmålinger** blandt 88 målinger? Vi testede to modeller.
+> **Model A** bruger hele gruppens gennemsnit: Alt uden for **middel ± 2 standardafvigelser** er en afvigelse. Den fandt kun **__ af 8** og gav __ falske alarmer, alle **efter aktivitet**, fordi den ikke ved, at en høj puls efter løb er normal.
+> **Model B** sammenligner med personens **egne målinger i samme situation**. Den fandt **__ af 8** og gav kun __ falske alarmer. Sensitiviteten steg fra __ til __ %.
+> Det er præcis derfor, et **smartwatch** lærer din personlige normal og bruger bevægelsessensoren. Men der er også **bias**: Pulsoximetre overser oftere iltmangel hos personer med **mørk hud**, fordi melanin også absorberer lys."
 
-**Stikord:** middel ± 2s · z-værdi · fanger neglelak · men ikke kontekst · smartwatch · personlig normal · atrieflimren · bias mørk hud
-**Overgang til P3:** "Men hvorfor faldt iltmætningen næsten ikke, selvom vi løb op ad trapperne? Det er kemi."
+**Stikord:** 8 fejlmålinger · model A: gruppe, __/8, falske alarmer efter aktivitet · model B: personlig, __/8 · sensitivitet __ → __ · smartwatch · bias mørk hud
+**Overgang til P3:** "Men hvorfor er iltmætningen så stabil, at selv et lille fald er mistænkeligt? Det er kemi."
 
 ---
 
-## KEMI (ca. 3:30) · P3
+## KEMI (ca. 4:30) · P3
 
 ### Slide 14 – Hæmoglobin (1:00)
 
@@ -153,25 +156,35 @@
 
 ### Slide 16 – Fysisk aktivitet og vores resultater (1:15)
 
-> "Når vi arbejder, laver musklerne mere energi ved **respiration**, og det giver mere **CO₂** og varme. CO₂ reagerer med vand og danner **kulsyre**, så blodet bliver **surere**. Det viste vi med **BTB**: Efter trappeløb blev BTB'en gul på __ sekunder mod __ sekunder i hvile.
+> "Når vi arbejder, laver musklerne mere energi ved **respiration**, og det giver mere **CO₂** og varme. CO₂ reagerer med vand og danner **kulsyre**, så blodet bliver **surere**.
 > Det sure miljø og varmen får hæmoglobinet til at **slippe ilten lettere**. Det hedder **Bohr-effekten**, og kurven bliver forskudt mod højre. Så ilten havner præcis dér, hvor musklerne arbejder.
-> Og nu kan vi forklare vores resultater: **Pulsen steg**, fordi blodet skulle cirkulere hurtigere. Men **iltmætningen** faldt næsten ikke, fordi pulsoximeteret måler **arterieblodet**, som lige har været i lungerne. Takket være den flade top bliver det mættet igen. Faldet i ilt sker i **veneblodet**, og det måler pulsoximeteret ikke."
+> Nu kan vi forklare måledagbogen: **Pulsen** var højest efter aktivitet, fordi blodet skulle cirkulere hurtigere. Men **iltmætningen** var stabil, fordi pulsoximeteret måler **arterieblodet**, som lige har været i lungerne. Takket være den flade top bliver det mættet igen. Faldet i ilt sker i **veneblodet**, og det måler pulsoximeteret ikke. Derfor er selv et lille fald i SpO₂ et **faresignal**, og derfor kunne AI'en finde fejlmålingerne."
 
-**Stikord:** respiration → CO₂ · kulsyre · surere · BTB-resultat · Bohr-effekt · højreforskydning · puls ↑ · SpO₂ ≈ uændret · arterie vs. vene
+**Stikord:** respiration → CO₂ · kulsyre · surere · Bohr-effekt · højreforskydning · puls ↑ · SpO₂ stabil · arterie vs. vene · lille fald = faresignal
+
+### Slide 17 – Den blå flaske (1:00)
+
+> "Vores kemiforsøg er **den blå flaske**, som er en model af iltoptag og iltforbrug. I flasken er der glukose og farvestoffet methylenblåt. Glukosen gør farvestoffet **farveløst**. Når vi **ryster**, opløses ilt fra luften, og så bliver det **blåt** igen.
+> Rystningen svarer til **lungerne**, og glukosen, der bruger ilten, svarer til **respirationen** i musklerne.
+> Ved 20 °C tog det ca. **__ sekunder**, før den blev farveløs, men ved 40 °C kun **__ sekunder**. Varmt betyder hurtigere forbrug, ligesom i arbejdende muskler. For at holde den blå i et minut skulle vi ryste **__ gange** ved 40 °C mod **__ gange** ved 20 °C. Det svarer til, at man trækker vejret hurtigere under arbejde. Så længe tilførslen følger med, forbliver flasken blå, og det er præcis derfor, vores iltmætning var stabil.
+> Modellens **begrænsning** er, at methylenblåt reagerer kemisk med ilten, mens hæmoglobin binder ilten løst, og flasken viser heller ingen S-kurve."
+
+**Stikord:** model · glukose → farveløs · ryst = lunger → blå · 20 °C __ s, 40 °C __ s · varmere = hurtigere forbrug · ryst oftere = trække vejret hurtigere · SpO₂ stabil · begrænsning
+**Rekvisit:** Medbring en blå flaske (hvis skolen tillader det), og ryst den live!
 **Overgang til P4:** "Vi har nu set, at teknologien virker på os. Men virker den lige godt for alle i verden? Det tager [Navn] sig af."
 
 ---
 
 ## GEOGRAFI (ca. 3:30) · P4
 
-### Slide 17 – Faktorer (1:00)
+### Slide 18 – Faktorer (1:00)
 
 > "Hudkræft er mest udbredt, hvor der er meget **UV-stråling** og mange med **lys hud**. Derfor har **Australien** verdens højeste forekomst, og **Danmark** ligger også højt, blandt andet på grund af solferier.
 > Om et land får gavn af AI, afhænger af flere faktorer. Vi har fundet seks vigtige: **økonomi, infrastruktur** som strøm og internet, **sundhedspersonale**, **lige adgang** til sundhed, om der findes **data, der passer til befolkningen**, og **lovgivning og tillid**."
 
 **Stikord:** UV + lys hud · Australien · Danmark · 6 faktorer
 
-### Slide 18 – AI-parathedsmodellen (1:15)
+### Slide 19 – AI-parathedsmodellen (1:15)
 
 > "Vi har lavet vores egen model, som vi kalder **AI-parathedsmodellen**. Vi har givet fem lande 1–5 point for hver faktor.
 > **Danmark** får 30 af 30, fordi vi har gratis sundhedsvæsen, internet og data. **USA** får kun 22, selvom de er rige, fordi der er **ulige adgang**: Mange har ikke en sundhedsforsikring. **Indien** får 14 og **Nigeria** 8, fordi der er få læger, dårligere infrastruktur, og fordi AI'en ikke er trænet på mørk hud.
@@ -179,7 +192,7 @@
 
 **Stikord:** egen model · 5 lande · DK 30 · USA 22 (ulige) · Indien 14 · Nigeria 8 · begrænsninger
 
-### Slide 19 – AI-paradokset og kræftdiagnose (1:15)
+### Slide 20 – AI-paradokset og kræftdiagnose (1:15)
 
 > "Det giver det, vi kalder **AI-paradokset**: De lande, der har **mest brug** for AI, fordi der er få læger, har **dårligst adgang** til den.
 > For **kræftdiagnosticering** betyder det, at AI i Danmark kan bruges til at **sortere**, så hudlægerne tager de alvorlige tilfælde først, og ventetiderne bliver kortere. I fx Indien kan AI på en smartphone hjælpe i landsbyer **uden hudlæge**, men kun hvis den virker på **mørk hud**, og hvis der også er **behandling** bagefter.
@@ -191,18 +204,18 @@
 
 ## FÆLLES KONKLUSION (ca. 1:00) · P4 (eller alle på skift)
 
-### Slide 20 – Konklusion
+### Slide 21 – Konklusion
 
 > "Så for at svare på vores problemformulering:
 > **[P1]** AI kan genkende hudkræft på billeder næsten lige så godt som hudlæger, fordi kræftceller giver synlige forandringer.
-> **[P2]** Med lys kan vi måle puls og ilt, og AI kan finde afvigelser i de data.
+> **[P2]** Med lys kan vi måle puls og ilt, og AI finder afvigelser bedst, når den kender personens egen normal.
 > **[P3]** Kemien forklarer, hvorfor iltmætningen er stabil hos raske, og det betyder, at et fald faktisk er et vigtigt faresignal.
 > **[P4]** Men AI er **kun så god som dens data og det sundhedssystem, den bruges i**. Uden data om alle hudtyper og uden læger og behandling risikerer AI at øge uligheden.
 > **[Alle/P4]** AI er et **stærkt hjælpeværktøj, ikke en læge**. Tak fordi I lyttede. Har I nogle spørgsmål?"
 
 **Stikord:** én sætning pr. fag · kun så god som data og system · hjælpeværktøj, ikke læge · spørgsmål?
 
-### Slide 21 – Kilder (vises kun, læses ikke op)
+### Slide 22 – Kilder (vises kun, læses ikke op)
 
 ---
 
@@ -212,14 +225,14 @@
 |---|---|---|---|
 | Intro | P1 | 1–2 | 1:30 |
 | Biologi + liveforsøg | P1 | 3–8 | 5:00 |
-| Fysik + ugeforsøg | P2 | 9–13 | 4:00 |
-| Kemi | P3 | 14–16 | 3:30 |
-| Geografi | P4 | 17–19 | 3:30 |
-| Konklusion | P4/alle | 20 | 1:00 |
-| **I alt** | | | **ca. 18:30** |
+| Fysik + ugeforsøg | P2 | 9–13 | 4:30 |
+| Kemi + blå flaske | P3 | 14–17 | 4:30 |
+| Geografi | P4 | 18–20 | 3:30 |
+| Konklusion | P4/alle | 21 | 1:00 |
+| **I alt** | | | **ca. 20:00** |
 
-**Skal I ned i tid?** Spring slide 5 (bilmodellen) og slide 9 (fotonenergi) over, og tag dem i stedet ved spørgsmålene, hvis censor spørger.
-**Har I mere tid?** Tag pennestreg-testen med i live-demoen, og vis BTB-glassene frem.
+**Skal I ned i tid?** Spring slide 5 (bilmodellen) og slide 9 (fotonenergi) over, og forkort slide 15 (bindingskurven) til én sætning om den flade top. Tag resten ved spørgsmålene, hvis censor spørger.
+**Har I mere tid?** Tag pennestreg-testen med i live-demoen, ryst den blå flaske live, og vis PPG-værktøjet med en af jeres videoer.
 
 ## Gode vaner, når I fremlægger
 

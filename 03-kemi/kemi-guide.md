@@ -1,7 +1,7 @@
 # 3. Kemi – Hæmoglobin, ilt og fysisk aktivitet
 
 > **Underspørgsmål:** Hvordan binder hæmoglobin ilt i blodet, og hvorfor ændrer iltmætningen sig ved fysisk aktivitet?
-> **Kobling til forsøg:** Kemien **forklarer resultaterne** fra ugeforsøget (fysik). Hertil kommer et lille kemiforsøg med **BTB og CO₂** og en **model af bindingskurven** i regnearket.
+> **Kobling til forsøg:** Kemien **forklarer resultaterne** fra ugeforsøgets måledagbog (fysik). Kemiens egen del af ugeforsøget er **den blå flaske**, en model af iltoptag og iltforbrug. Dertil kommer en **model af bindingskurven** i regnearket.
 
 ---
 
@@ -118,67 +118,92 @@ Ved meget hårdt arbejde laver musklerne også **mælkesyre (laktat)**, som give
 
 ## Del B – Forklaring af jeres resultater fra ugeforsøget
 
-Brug denne tabel, når I præsenterer data. Sæt jeres egne tal ind.
+Brug denne tabel, når I præsenterer data fra **måledagbogen** (fysik) og **den blå flaske** (kemi). Sæt jeres egne tal ind.
 
 | Observation i forsøget | Kemisk/biologisk forklaring |
 |---|---|
-| **Pulsen steg** fra __ til __ slag/min | Musklerne bruger mere O₂ og laver mere CO₂. Hjertet pumper hurtigere for at transportere mere ilt til musklerne og fjerne CO₂. |
-| **Iltmætningen (SpO₂) ændrede sig næsten ikke** (fx 98 % → 97 %) | Pulsoximeteret måler **arterieblodet**, der lige har været i lungerne. Højere vejrtrækning og den **flade top** på bindingskurven sørger for, at Hb næsten bliver fuldt mættet i lungerne igen. Det ekstra iltforbrug ses i **veneblodet** (SvO₂), som pulsoximeteret ikke måler. |
-| **Lille fald i SpO₂** lige efter arbejde (hvis I så det) | (1) **Bohr-effekten**: højere temperatur og lavere pH forskyder kurven en smule til højre, også i arterieblodet. (2) Blodet passerer lungerne hurtigere, så der er lidt mindre tid til at binde ilt. (3) **Fejlmåling**: bevægelse og kolde fingre (se fysikguiden). Et fald på 1–2 procentpoint ligger inden for apparatets usikkerhed. |
-| **Pulsen faldt igen** i restitutionen | CO₂-niveauet og pH normaliseres, og iltgælden betales tilbage. Hjertet behøver ikke pumpe så hurtigt længere. |
-| **Forskel mellem personer** | Trænede personer har et større hjerte (slagvolumen) og flere røde blodlegemer, så de har lavere hvilepuls og hurtigere restitution. |
-| **Hvornår ville SpO₂ falde rigtigt?** | Ved lungesygdom (fx lungebetændelse, COVID-19), i stor højde, ved hjertefejl, og nogle gange hos eliteatleter ved maksimalt arbejde. Det er netop dét, en AI-afvigelsesmodel skal opdage. |
+| **Pulsen var højest "efter aktivitet"** (__ slag/min mod __ om morgenen) | Musklerne bruger mere O₂ og laver mere CO₂ ved respiration. Hjertet pumper hurtigere for at levere ilt og fjerne CO₂. |
+| **SpO₂ lå stabilt (96–99 %) i alle situationer** | Pulsoximeteret måler **arterieblodet**, der lige har været i lungerne. Når musklerne bruger mere ilt, trækker vi vejret hurtigere, og den **flade top** på bindingskurven sørger for, at Hb bliver næsten fuldt mættet igen. Det ekstra iltforbrug ses i **veneblodet**, som pulsoximeteret ikke måler. Det er det samme, I så i den blå flaske: Så længe "vejrtrækningen" (rystningen) følger med forbruget, forbliver opløsningen blå. |
+| **Lavest puls om morgenen** | Kroppen er i hvile, og stofskiftet og iltbehovet er lavt. |
+| **Fejlmålingerne gav lav SpO₂** (fx neglelak: __ %) | Det er *ikke* kemi, men fysik: Neglelakken absorberer lyset, så apparatet regner forkert. Kemisk er ilten i blodet uændret. |
+| **Forskel mellem personer** | Trænede personer har et større hjerte (slagvolumen) og flere røde blodlegemer, så de har lavere hvilepuls. Derfor er en **personlig** normal bedre end gruppens gennemsnit. |
+| **Den blå flaske affarvedes hurtigere i varmt vand** | Kemiske reaktioner går hurtigere ved højere temperatur, så ilten blev brugt hurtigere. På samme måde bruger varme, arbejdende muskler ilten hurtigere, og Bohr-effekten får hæmoglobinet til at afgive mere. |
+| **Hvornår ville SpO₂ falde rigtigt?** | Ved lungesygdom (fx lungebetændelse, COVID-19), i stor højde, ved hjertefejl og nogle gange hos eliteatleter ved maksimalt arbejde. Fordi SpO₂ normalt er så stabil, er selv et fald på få procentpoint et vigtigt **faresignal**, og det er præcis dét, en AI-afvigelsesmodel skal opdage. |
 
 ---
 
-## Del C – Ekstra kemiforsøg: CO₂ i udåndingsluft før og efter arbejde (BTB)
+## Del C – Kemiforsøg: Den blå flaske (model af iltoptag og iltforbrug)
 
 ### Formål
 
-At vise, at kroppen laver og udånder **mere CO₂** ved fysisk aktivitet, og at CO₂ danner **syre** i vand. Det er det samme, der sker i blodet (Bohr-effekten).
+At undersøge en reaktion, hvor **farven viser, om der er ilt til stede**, og hvordan **temperaturen** påvirker, hvor hurtigt ilten bliver brugt. Forsøget er en model af blodets balance mellem **iltoptag i lungerne** og **iltforbrug i musklerne**.
 
-### Teori
+### Teori (forenklet)
 
-**BTB (bromthymolblåt)** er en syre-base-indikator:
-- **Blå** = basisk (pH > ca. 7,6)
-- **Grøn** = neutral (ca. pH 7)
-- **Gul** = sur (pH < ca. 6)
+I flasken er der vand, en base (KOH eller NaOH), **glukose** og farvestoffet **methylenblåt**.
 
-CO₂ fra udåndingsluften reagerer med vandet: CO₂ + H₂O ⇌ H₂CO₃ ⇌ H⁺ + HCO₃⁻. De ekstra H⁺-ioner farver BTB gul.
+1. **Glukose** reagerer med methylenblåt, så det bliver **farveløst**. Glukosen "bruger" farvestoffets evne til at reagere med ilt.
+2. Når I **ryster** flasken, opløses **ilt (O₂)** fra luften i væsken. Ilten reagerer med det farveløse stof, så det bliver **blåt** igen.
+3. Når ilten er **brugt op**, bliver væsken farveløs igen. Det kan gentages mange gange.
+
+\[ \text{blå (ilt til stede)} \;\xrightarrow{\text{glukose bruger ilten}}\; \text{farveløs (ingen ilt)} \;\xrightarrow{\text{ryst: O}_2\text{ fra luften}}\; \text{blå} \]
+
+| I flasken | I kroppen |
+|---|---|
+| Rystning = ilt opløses fra luften | **Lungerne**: ilt optages i blodet |
+| Glukose bruger ilten | **Respiration** i musklerne: C₆H₁₂O₆ + 6 O₂ → 6 CO₂ + 6 H₂O |
+| Blå farve = der er ilt | **Lyserødt HbO₂** = iltet blod |
+| Farveløs = ilten er brugt | **Mørkerødt Hb** = blod uden ilt |
+| Varmere vand = hurtigere forbrug | **Arbejdende muskler** er varmere og bruger ilten hurtigere |
+| Farven aflæses med øjet | **Pulsoximeteret** "aflæser farven" med lys |
 
 ### Materialer
 
-3 bægerglas (100 mL), 50 mL vand i hvert, BTB-opløsning, **ét nyt sugerør pr. person**, stopur, hvidt papir som baggrund, sikkerhedsbriller.
+- 1 L konisk kolbe med gummiprop. Kun halvt fyldt, så der er luft (ilt) over væsken.
+- 300 mL vand, ca. 8 g KOH (eller ca. 6 g NaOH), ca. 10 g glukose (druesukker), 5 dråber methylenblåt (1 %). **Læreren afvejer basen.**
+- 3 vandbade/baljer: ca. 20 °C (stuetemperatur), ca. 30 °C og ca. 40 °C (varmt vand fra hanen) + termometer
+- Stopur, hvidt papir som baggrund
+- Sikkerhedsbriller og handsker
 
 ### Fremgangsmåde
 
-1. Hæld **50 mL vand** og **10 dråber BTB** i hvert af de tre glas. Opløsningen skal være **blå**. Hvis den er grøn, kan læreren tilsætte en lille dråbe fortyndet NaOH.
-2. **Glas 1 = kontrol.** Det skal I ikke røre.
-3. **Glas 2 = hvile.** Forsøgspersonen har siddet stille i 5 min og **puster roligt ud** gennem sugerøret ned i vandet, i sit normale vejrtrækningstempo. Start stopuret. Stop, når farven er **gul** (sammenlign med kontrollen). Notér tiden.
-4. Forsøgspersonen laver **3 minutters arbejde** (samme som i ugeforsøget).
-5. **Glas 3 = efter arbejde.** Samme person puster lige med det samme ud i et nyt glas, i det tempo kroppen selv vil (hurtigere vejrtrækning). Notér tiden til gul.
-6. Gentag gerne med 2–3 personer.
+1. Læreren opløser basen i vandet i kolben. Tilsæt glukose og methylenblåt, og sæt proppen i.
+2. Lad kolben stå, til væsken er **farveløs** (1–3 min).
+3. **Ryst kolben kraftigt 10 gange** (tæl højt, så det er ens hver gang). Væsken bliver blå.
+4. Stil kolben på bordet, og **start stopuret**. Stop, når væsken er **farveløs** (sammenlign med det hvide papir). Notér tiden.
+5. Gentag 3 gange ved **stuetemperatur**.
+6. Stil kolben i vandbadet ved **30 °C** i 5 minutter, og gentag trin 3–4 tre gange. Mål væskens temperatur.
+7. Gentag ved **40 °C**.
+8. **Variant (valgfri):** Ryst 5 gange og 20 gange (i stedet for 10) ved samme temperatur. Mere rystning giver mere opløst ilt og en længere blå periode.
+9. **Variant: "Hold den blå"** (valgfri, men god til fremlæggelsen): Ved 20 °C og ved 40 °C prøver I at holde væsken blå i 1 minut ved at ryste kort, hver gang den begynder at blive lys. Tæl, hvor mange gange I skal ryste. Ved 40 °C skal I ryste oftere, ligesom man trækker vejret hurtigere under arbejde for at holde blodet iltet.
 
-> **Sikkerhed:** Pust kun **ud**, og sug aldrig. Ét sugerør pr. person. Brug briller. BTB kan farve tøj.
+> **Sikkerhed:** KOH og NaOH er **ætsende**. Brug briller og handsker. Proppen skal sidde fast, når I ryster. Methylenblåt farver hud og tøj. Følg lærerens anvisning til bortskaffelse (normalt i vasken med rigeligt vand).
 
-### Resultatskema
+### Resultatskema (fanen **Blå flaske** i regnearket)
 
-| Person | Tid til gul – hvile (s) | Tid til gul – efter arbejde (s) |
-|---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| Gennemsnit | | |
+| Temperatur (°C) | Forsøg 1 (s) | Forsøg 2 (s) | Forsøg 3 (s) | Gennemsnit (s) |
+|---|---|---|---|---|
+| ca. 20 | | | | |
+| ca. 30 | | | | |
+| ca. 40 | | | | |
 
 ### Forventet resultat og forklaring
 
-Efter arbejde skifter farven **hurtigere**, fordi:
-- musklerne har lavet mere CO₂ ved respiration
-- man trækker vejret hurtigere og dybere, så der kommer mere CO₂ ud pr. minut
+- Tiden til farveløs bliver **kortere**, jo varmere det er. Ofte halveres tiden for hver ca. 10 °C. Det skyldes, at molekylerne bevæger sig hurtigere og støder oftere sammen, så reaktionen går hurtigere.
+- **Kobling til kroppen:** Arbejdende muskler er varmere og har et højere stofskifte, så de bruger ilten hurtigere. Derfor stiger **pulsen og vejrtrækningen**, og det er præcis, hvad I målte i måledagbogen. Så længe tilførslen følger med forbruget, forbliver blodet i arterierne iltmættet, og det er derfor, SpO₂ var stabil.
+- Efter mange gentagelser bliver væsken gullig, og den blå periode bliver kortere, fordi glukosen og ilten i flasken bruges op.
 
-**Kobling:** Det samme CO₂ gør **blodet** lidt surere i de arbejdende muskler. Det får hæmoglobin til at **afgive mere ilt** (Bohr-effekten). Det er derfor, ilten havner præcis dér, hvor der er brug for den.
+### Modellens begrænsninger (skal med!)
 
-**Fejlkilder:** Det er svært at puste præcis lige meget hver gang. Det er subjektivt at bedømme, hvornår farven er "gul". Personerne har også forskellig lungekapacitet. Forbedring: Brug en pH-måler i stedet for at bedømme farven med øjet.
+- Methylenblåt **reagerer kemisk** med ilten (det oxideres). Hæmoglobin **binder** ilten løst, uden at jernet ændres (Fe²⁺ forbliver Fe²⁺).
+- Modellen viser **ikke** den S-formede kurve (kooperativ binding) eller Bohr-effektens pH-afhængighed.
+- Den viser kun balancen mellem **tilførsel og forbrug** af ilt, og hvordan temperatur påvirker forbruget.
+
+**Fejlkilder:** Det er svært at ryste præcis lige hårdt. Det er subjektivt, hvornår væsken er "farveløs". Temperaturen falder, mens kolben står på bordet. Forbedring: Brug et lysmåler-app (mobilens lyssensor) eller et kolorimeter for at måle farven objektivt.
+
+### Valgfrit ekstra: BTB og CO₂ i udåndingsluft
+
+Hvis I har tid, kan I vise, at CO₂ gør vand surt (og dermed blodet, jf. Bohr-effekten): Pust med et sugerør ud i 50 mL vand med 10 dråber **BTB** (blå → gul ved syre), først i hvile og så efter 2 min trappeløb, og tag tid til farveskiftet. Efter aktivitet skifter farven hurtigere, fordi der udåndes mere CO₂: CO₂ + H₂O ⇌ H₂CO₃ ⇌ H⁺ + HCO₃⁻. *Sikkerhed: Pust kun ud, og brug ét sugerør pr. person.* Fanen **BTB** i regnearket kan bruges til resultaterne.
 
 ---
 

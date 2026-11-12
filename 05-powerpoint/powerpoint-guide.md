@@ -1,6 +1,6 @@
 # 5. PowerPoint – guide
 
-Filen **`FFFO-praesentation.pptx`** er en færdig skabelon med 21 slides, diagrammer, grafer der kan redigeres, og **talenoter** (stikord og manus) under hver slide. Den følger manuskriptet i `07-manuskript/manuskript.md` slide for slide.
+Filen **`FFFO-praesentation.pptx`** er en færdig skabelon med 22 slides, diagrammer, grafer der kan redigeres, og **talenoter** (stikord og manus) under hver slide. Den følger manuskriptet i `07-manuskript/manuskript.md` slide for slide.
 
 ## Det skal I selv gøre
 
@@ -9,12 +9,12 @@ Filen **`FFFO-praesentation.pptx`** er en færdig skabelon med 21 slides, diagra
 | 1 | Skriv jeres **navne, klasse og skole** | Slide 1 |
 | 2 | Indsæt **4 testbilleder** fra jeres AI-forsøg | Slide 7 (stiplede felter) |
 | 3 | Ret **konfusionsmatrix og procenter** til jeres egne tal | Slide 8 (gul mærkat = eksempeldata) |
-| 4 | Indsæt **foto** af jer under ugeforsøget | Slide 11 |
-| 5 | Udskift **graferne** med jeres målinger: højreklik på grafen → *Rediger data* → indsæt tal fra `maaleskema.xlsx` | Slide 12, 13 |
-| 6 | Skriv **BTB-resultatet** | Slide 16 |
-| 7 | Indsæt et **verdenskort** over modermærkekræft (GLOBOCAN eller Our World in Data) | Slide 17 |
-| 8 | Ret **pointene** i AI-parathedsmodellen, hvis I vurderer anderledes | Slide 18 |
-| 9 | Fjern alle gule **"EKSEMPELDATA"**-mærkater, når tallene er jeres egne | Slide 8, 12, 13, 16 |
+| 4 | Indsæt **foto** af fingeren over mobilkameraet | Slide 11 |
+| 5 | Udskift **graferne og tabellerne** med jeres målinger: højreklik på grafen → *Rediger data* → indsæt tal fra fanerne *Mobil-PPG* og *Dagbog-resultater* i `maaleskema.xlsx` | Slide 12, 13 |
+| 6 | Indsæt jeres **blå flaske-tider** og "hold den blå"-resultat | Slide 17 |
+| 7 | Indsæt et **verdenskort** over modermærkekræft (GLOBOCAN eller Our World in Data) | Slide 18 |
+| 8 | Ret **pointene** i AI-parathedsmodellen, hvis I vurderer anderledes | Slide 19 |
+| 9 | Fjern alle gule **"EKSEMPELDATA"**-mærkater, når tallene er jeres egne | Slide 8, 12, 13, 17 |
 
 ## Slideoversigt
 
@@ -30,17 +30,18 @@ Filen **`FFFO-praesentation.pptx`** er en færdig skabelon med 21 slides, diagra
 | 8 | Resultat: Hvor god er vores AI? | P1 | Konfusionsmatrix, sensitivitet, specificitet, forskning, fejlkilder |
 | 9 | Lys: rødt og infrarødt | P2 | Spektrum, \(E = hc/\lambda\), UV vs. rødt + lommelygte-demo |
 | 10 | Sådan virker pulsoximeteret | P2 | Skitse, PPG-signal, AC/DC, puls = 60/T, R og SpO₂ |
-| 11 | Ugeforsøg: metode | P2 | 4 trin, kontrolvariable, sikkerhed |
-| 12 | Ugeforsøg: resultater | P2 | Grafer over puls og SpO₂ + tabel |
-| 13 | AI og afvigelser i data | P2 | Punktdiagram med normalområde, 3 niveauer af AI, bias |
+| 11 | Ugeforsøg: Find din egen normal | P2 | Pulsmåler med mobilen, måledagbog + AI-blindtest, blå flaske |
+| 12 | Resultater: lys gennem fingeren og jeres normal | P2 | DC pr. farve, mobil vs. oximeter, puls og SpO₂ pr. situation |
+| 13 | Kan AI'en finde fejlmålingerne? | P2 | Gruppemodel vs. personlig model, sensitivitet/specificitet, bias |
 | 14 | Hæmoglobin – blodets iltbærer | P3 | Model af Hb (4 kæder, Fe²⁺, O₂) + fakta |
 | 15 | Ligevægt og den S-formede bindingskurve | P3 | Reaktion, Le Chatelier, tabel, bindingskurve |
 | 16 | Bohr-effekten forklarer vores resultater | P3 | Respiration, kulsyre, forskudt kurve, forklaringstabel |
-| 17 | Hvem får gavn af AI? Seks faktorer | P4 | Verdenskort + 6 faktorer |
-| 18 | Vores model: AI-parathedsmodellen | P4 | Pointtabel + søjlediagram + begrænsninger |
-| 19 | AI-paradokset og kræftdiagnosticering | P4 | Behov/adgang-diagram, DK vs. Indien/Nigeria, DTM |
-| 20 | Konklusion | Alle | Én sætning pr. fag + hovedbudskab |
-| 21 | Kilder | – | Vises kun |
+| 17 | Kemiforsøg: Den blå flaske | P3 | Model (flaske ↔ krop), tid vs. temperatur, "hold den blå", begrænsning |
+| 18 | Hvem får gavn af AI? Seks faktorer | P4 | Verdenskort + 6 faktorer |
+| 19 | Vores model: AI-parathedsmodellen | P4 | Pointtabel + søjlediagram + begrænsninger |
+| 20 | AI-paradokset og kræftdiagnosticering | P4 | Behov/adgang-diagram, DK vs. Indien/Nigeria, DTM |
+| 21 | Konklusion | Alle | Én sætning pr. fag + hovedbudskab |
+| 22 | Kilder | – | Vises kun |
 
 ## Designregler (hvis I laver flere slides)
 

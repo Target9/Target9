@@ -94,8 +94,8 @@ text(sh, 0.9 * IN, 1.45 * IN, 11.6 * IN, 1.05 * IN,
      size=22, bold=True, color=WHITE, anchor=MSO_ANCHOR.MIDDLE)
 cards = [
     ("BIOLOGI", BIO, "Hvordan adskiller kræftceller i huden sig fra raske celler – og i hvor høj grad kan AI genkende hudkræft ud fra billeder?", "Liveforsøg: AI analyserer hudbilleder"),
-    ("FYSIK", FYS, "Hvordan måler en pulsoximeter puls og iltmætning med lys – og hvordan kan AI bruge data til at opdage afvigelser?", "Ugeforsøg: puls og iltmætning"),
-    ("KEMI", KEM, "Hvordan binder hæmoglobin ilt i blodet – og hvorfor ændrer iltmætningen sig ved fysisk aktivitet?", "Ugeforsøg: forklarer resultaterne"),
+    ("FYSIK", FYS, "Hvordan måler en pulsoximeter puls og iltmætning med lys – og hvordan kan AI bruge data til at opdage afvigelser?", "Ugeforsøg: pulsmåler med mobilen + måledagbog"),
+    ("KEMI", KEM, "Hvordan binder hæmoglobin ilt i blodet – og hvorfor ændrer iltmætningen sig ved fysisk aktivitet?", "Forklarer ugeforsøget + den blå flaske"),
     ("GEOGRAFI", GEO, "Hvilke faktorer afgør, om et lands befolkning får gavn af AI i sundhed – og hvad betyder det for kræftdiagnosticering?", "Model + perspektivering"),
 ]
 cw = 2.9 * IN
@@ -393,127 +393,128 @@ text(sh, 0.6 * IN, 6.3 * IN, 12.1 * IN, 0.6 * IN,
        ("Kun det pulserende signal bruges, så apparatet måler iltmætningen i arterieblodet (SpO₂).", {})]],
      size=16)
 
+from pptx.chart.data import CategoryChartData  # noqa: E402
+from pptx.enum.chart import XL_CHART_TYPE  # noqa: E402
+
 # ============================================================================ 11 METODE
-s, sh, col = new_slide("fys", "Ugeforsøg: metode", """
-P2 (0:30): Målte på alle fire. Hvile → 3 min trappeløb → målinger hvert 30. sekund i 5 min (restitution).
-Fejlkilde-forsøg: bevægelse, kolde fingre, neglelak, lys udefra.
-""", subtitle="Uafhængig variabel: aktivitet og tid · Afhængige variable: puls og SpO₂")
-steps = [("1", "Hvile", "5 min stille siddende\n3 målinger", BIO),
-         ("2", "Arbejde", "3 min trappeløb /\nstep-test", KEM),
-         ("3", "Restitution", "måling ved 0, 30, 60, 90,\n120, 180, 240, 300 s", FYS),
-         ("4", "Fejlkilder", "bevægelse · kold finger\nneglelak · lys udefra", GEO)]
-cw = 2.6 * IN
-for i, (n, name, desc, c) in enumerate(steps):
-    x = 0.6 * IN + i * (cw + 0.57 * IN)
-    circ = rect(sh, x + cw / 2 - 0.45 * IN, 1.9 * IN, 0.9 * IN, 0.9 * IN, fill=c, shape=MSO_SHAPE.OVAL)
-    text(sh, x + cw / 2 - 0.45 * IN, 1.9 * IN, 0.9 * IN, 0.9 * IN, n, size=30, bold=True, color=WHITE,
-         align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    text(sh, x, 2.95 * IN, cw, 0.5 * IN, name, size=22, bold=True, color=c, align=PP_ALIGN.CENTER)
-    text(sh, x, 3.45 * IN, cw, 1.0 * IN, desc.split("\n"), size=15, align=PP_ALIGN.CENTER)
-    if i < 3:
-        arrow(sh, x + cw + 0.05 * IN, 2.35 * IN, x + cw + 0.52 * IN, 2.35 * IN, color=GREY, width=3)
-placeholder(sh, 0.6 * IN, 4.75 * IN, 3.8 * IN, 2.05 * IN, "foto af jer under forsøget", color=FYS)
-label_box(sh, 4.65 * IN, 4.75 * IN, 3.9 * IN, 2.05 * IN, "Kontrolvariable",
-          ["• Samme finger og apparat", "• Siddende, hånd i ro", "• Samme arbejde og tid"], FYS, size=14)
-label_box(sh, 8.8 * IN, 4.75 * IN, 3.9 * IN, 2.05 * IN, "Sikkerhed",
-          ["• Kun så hårdt man selv vil", "• Stop ved svimmelhed", "• Ingen vejrholdning"], KEM, size=14)
+s, sh, col = new_slide("fys", "Ugeforsøg: Find din egen normal", """
+P2 (0:45): Problemet med et simpelt før/efter-forsøg er, at iltmætningen næsten ikke ændrer sig hos raske. Derfor har vi lavet et ugeforsøg i to dele (+ kemiens blå flaske).
+DEL 1: Vi byggede en pulsmåler med mobilkameraet – lommelygte + finger over kameraet – og analyserede lyset i hvert billede.
+DEL 2: Måledagbog i 5 dage: puls og SpO₂ 4 gange om dagen (morgen, skole, efter aktivitet, aften). Hver af os lavede 2 hemmelige fejlmålinger (neglelak, kold finger, bevægelse, lys) – en anden noterede facit.
+Så kunne vi teste, om en AI-model kan finde fejlmålingerne – præcis som testbillederne i biologi.
+""", subtitle="Hos raske ændrer iltmætningen sig næsten ikke – derfor undersøger vi lyset, den personlige normal og afvigelser")
+parts = [("1", "Pulsmåler med mobilen", "dag 1", FYS,
+          ["Lommelygte + finger over kameraet", "Video i 30 s → lyset i hvert billede", "Sammenlignet med pulsoximeteret",
+           "Rød, grøn og blå kanal"]),
+         ("2", "Måledagbog + AI-blindtest", "dag 1–5", PURPLE,
+          ["Puls og SpO₂ 4 gange om dagen", "Morgen · skole · efter aktivitet · aften", "2 hemmelige fejlmålinger pr. person",
+           "To AI-modeller skal finde dem"]),
+         ("3", "Den blå flaske (kemi)", "dag 2", KEM,
+          ["Model af iltoptag og iltforbrug", "Tid til farveløs ved 20, 30, 40 °C", "Forklarer, hvorfor SpO₂ er stabil",
+           "→ slide 17"])]
+cw = 3.95 * IN
+for i, (n, name, when, c, items) in enumerate(parts):
+    x = 0.6 * IN + i * (cw + 0.125 * IN)
+    rect(sh, x, 1.95 * IN, cw, 3.55 * IN, fill=tint(c, 0.9))
+    rect(sh, x, 1.95 * IN, cw, 0.8 * IN, fill=c)
+    circ = rect(sh, x + 0.2 * IN, 2.07 * IN, 0.56 * IN, 0.56 * IN, fill=WHITE, shape=MSO_SHAPE.OVAL)
+    text(sh, x + 0.2 * IN, 2.07 * IN, 0.56 * IN, 0.56 * IN, n, size=22, bold=True, color=c, align=PP_ALIGN.CENTER,
+         anchor=MSO_ANCHOR.MIDDLE)
+    text(sh, x + 0.9 * IN, 1.95 * IN, cw - 1.0 * IN, 0.8 * IN,
+         [(name, {"bold": True, "size": 16, "color": WHITE}), (when, {"size": 12, "color": WHITE})],
+         anchor=MSO_ANCHOR.MIDDLE, line_spacing=0.95)
+    bullets(sh, x + 0.25 * IN, 2.95 * IN, cw - 0.45 * IN, 2.5 * IN, items, size=15, bullet_color=c, gap=0.5)
+placeholder(sh, 0.6 * IN, 5.7 * IN, 3.95 * IN, 1.15 * IN, "foto: finger over mobilkameraet", color=FYS, size=12)
+rect(sh, 4.675 * IN, 5.7 * IN, 8.025 * IN, 1.15 * IN, fill=NAVY, shape=MSO_SHAPE.ROUNDED_RECTANGLE)
+text(sh, 4.9 * IN, 5.7 * IN, 7.6 * IN, 1.15 * IN,
+     [[("Blindtest: ", {"bold": True, "color": tint(GEO, 0.3)}),
+       ("En anden person noterede, hvilke målinger der var fejlmålinger. AI-modellen kendte ikke facit – ligesom testbillederne i biologi.", {"color": WHITE})]],
+     size=15, anchor=MSO_ANCHOR.MIDDLE)
 
 # ============================================================================ 12 RESULTATER
-s, sh, col = new_slide("fys", "Ugeforsøg: resultater", """
-P2 (0:45): Pulsen steg fra gns. __ til __ slag/min – tilbage nær hvile efter ca. __ min.
-SpO₂ ændrede sig kun fra __ % til __ %. BEMÆRK: y-aksen starter ved 90 % – ændringen ligger inden for ±2 procentpoint.
-Fejlkilder: neglelak/kold finger gav [beskriv].
-OVERGANG: "Hvorfor ilten ikke falder mere, forklarer [P3] om lidt."
-UDSKIFT GRAFERNE: højreklik på grafen → Rediger data → indsæt jeres tal fra maaleskema.xlsx.
+s, sh, col = new_slide("fys", "Resultater: lys gennem fingeren og jeres normal", """
+P2 (1:00): DEL 1: Mobilen målte samme puls som pulsoximeteret – i gns. kun __ slag/min forskel.
+Blåt lys blev næsten helt absorberet (DC ≈ 5), rødt slap bedst igennem (DC ≈ 235) – absorption afhænger af bølgelængden. Det er derfor, pulsoximeteret bruger rødt + infrarødt. Mobilen kan IKKE måle ilt (intet infrarødt lys).
+DEL 2: Pulsen svingede fra ca. __ om morgenen til __ efter aktivitet. SpO₂ lå stabilt på 97–98 % i ALLE situationer (y-aksen starter ved 90!).
+OVERGANG: "Hvorfor SpO₂ er så stabil, forklarer [P3]. Men først: kunne AI'en finde fejlmålingerne?"
+UDSKIFT: højreklik på grafen → Rediger data → tal fra fanerne Mobil-PPG og Dagbog-resultater.
 """)
 example_tag(sh, 10.1 * IN, 0.4 * IN)
-cats = ["hvile", "0 s", "30 s", "60 s", "90 s", "120 s", "180 s", "240 s", "300 s"]
-line_chart(sh, 0.5 * IN, 1.4 * IN, 6.2 * IN, 4.2 * IN, cats,
-           [("Puls (gns. for gruppen)", (72, 156, 142, 128, 117, 108, 96, 88, 82))], [KEM],
-           y_min=50, y_max=180, title="Puls (slag/min)", size=12, legend=False)
-line_chart(sh, 6.6 * IN, 1.4 * IN, 6.2 * IN, 4.2 * IN, cats,
-           [("SpO₂ (gns. for gruppen)", (98, 97, 97, 98, 98, 98, 98, 98, 98))], [FYS],
-           y_min=90, y_max=100, title="Iltmætning SpO₂ (%) – NB: y-akse fra 90", size=12, legend=False)
-rows = [["", "Hvile", "Lige efter", "Efter 5 min", "Ændring"],
-        ["Puls (slag/min)", "72", "156", "82", "+117 %"],
-        ["SpO₂ (%)", "98", "97", "98", "−1 procentpoint"]]
-table(sh, 0.6 * IN, 5.75 * IN, 7.6 * IN, 1.1 * IN, rows, FYS, size=13, col_widths=[1.8, 1, 1.2, 1.3, 1.8],
-      first_col_bold=True)
-rect(sh, 8.45 * IN, 5.75 * IN, 4.25 * IN, 1.1 * IN, fill=tint(GEO, 0.85), shape=MSO_SHAPE.ROUNDED_RECTANGLE)
-text(sh, 8.6 * IN, 5.75 * IN, 4.0 * IN, 1.1 * IN,
-     [("Fejlkilder", {"bold": True, "color": GEO}),
-      ("Neglelak: __ · Kold finger: __ · Bevægelse: __", {"size": 13})], size=15, anchor=MSO_ANCHOR.MIDDLE)
+text(sh, 0.6 * IN, 1.4 * IN, 6 * IN, 0.4 * IN, "Del 1 · Pulsmåler med mobilen", size=17, bold=True, color=FYS)
+bar_chart(sh, 0.5 * IN, 1.8 * IN, 3.3 * IN, 3.2 * IN, ["rød", "grøn", "blå"], (235, 40, 5), FYS,
+          title="Lys gennem fingeren (DC)", size=11, y_max=255,
+          point_colors=[RGBColor(0xD6, 0x45, 0x45), RGBColor(0x2E, 0x9E, 0x6A), RGBColor(0x2F, 0x6F, 0xDE)])
+rows = [["", "Mobil", "Oximeter"], ["P1", "64", "63"], ["P2", "73", "74"], ["P3", "79", "78"], ["P4", "68", "69"]]
+table(sh, 3.95 * IN, 1.95 * IN, 2.65 * IN, 2.3 * IN, rows, FYS, size=13, first_col_bold=True, col_widths=[0.55, 0.9, 1.2])
+text(sh, 3.95 * IN, 4.3 * IN, 2.6 * IN, 0.7 * IN, "puls (slag/min) · gns. forskel 0,5", size=12, color=GREY)
+text(sh, 0.6 * IN, 5.15 * IN, 5.9 * IN, 1.7 * IN,
+     [[("Blåt lys ", {"bold": True, "color": FYS}), ("absorberes næsten helt, ", {}), ("rødt ", {"bold": True, "color": KEM}),
+       ("slipper bedst igennem.", {})],
+      [("Absorptionen afhænger af bølgelængden – derfor bruger pulsoximeteret to bølgelængder.", {})],
+      [("Mobilen har intet infrarødt lys → kan kun måle puls, ikke ilt.", {"color": GREY})]], size=14)
+rect(sh, 6.75 * IN, 1.45 * IN, 0.012 * IN, 5.4 * IN, fill=LINE)
+text(sh, 7.0 * IN, 1.4 * IN, 6 * IN, 0.4 * IN, "Del 2 · Måledagbog (5 dage, 4 personer)", size=17, bold=True, color=PURPLE)
+sits = ["Morgen", "Skole", "Efter akt.", "Aften"]
+bar_chart(sh, 6.9 * IN, 1.8 * IN, 2.95 * IN, 4.0 * IN, sits, (66, 73, 131, 69), PURPLE, title="Gns. puls (slag/min)",
+          size=11, y_max=150)
+ch = bar_chart(sh, 9.85 * IN, 1.8 * IN, 2.95 * IN, 4.0 * IN, sits, (98.0, 98.0, 97.8, 98.3), FYS,
+               title="Gns. SpO₂ (%) – fra 90", size=11)
+ch.value_axis.minimum_scale = 90
+ch.value_axis.maximum_scale = 100
+ch.plots[0].data_labels.number_format = "0.0"
+ch.plots[0].data_labels.number_format_is_linked = False
+text(sh, 7.0 * IN, 5.95 * IN, 5.8 * IN, 0.9 * IN,
+     [[("Pulsen ", {"bold": True}), ("svinger fra ca. 66 til 131 slag/min. ", {}), ("SpO₂ ", {"bold": True}),
+       ("ligger stabilt på 97–98 % i alle situationer.", {})]], size=14)
 
 # ============================================================================ 13 AI OG AFVIGELSER
-s, sh, col = new_slide("fys", "AI og afvigelser i data", """
-P2 (0:45): Simpel afvigelsesmodel i Excel: klassens hvilemålinger → middelværdi og standardafvigelse.
-Uden for middel ± 2s = afvigelse (|z| > 2). Fangede neglelak-målingen.
-MEN: markerede også puls lige efter trappeløb – som er normal! Mangler KONTEKST.
-Rigtig AI (smartwatch): lærer DIN normal + bruger bevægelsessensoren. Apple Heart Study (400.000+): opdager uregelmæssig rytme (atrieflimren).
-BIAS: pulsoximetre overser oftere iltmangel ved mørk hud (Sjoding 2020) – melanin absorberer lys.
-OVERGANG: "Men hvorfor faldt iltmætningen næsten ikke, selvom vi løb op ad trapperne? Det er kemi."
-""")
+s, sh, col = new_slide("fys", "Kan AI'en finde fejlmålingerne?", """
+P2 (1:00): To AI-modeller på vores 88 målinger – 8 var hemmelige fejlmålinger.
+MODEL A (gruppemodel): normal = hele gruppens gennemsnit ± 2 standardafvigelser (|z| > 2). Fandt kun 4 af 8 – og gav 4 falske alarmer, ALLE "efter aktivitet". Den ved ikke, at høj puls efter løb er normal.
+MODEL B (personlig): normal = personens EGNE målinger i SAMME situation. Fandt alle 8 og gav kun 2 falske alarmer.
+Sensitivitet 50 % → 100 %. Det er præcis derfor, smartwatches lærer DIN normal og bruger bevægelsessensoren (Apple Heart Study, 400.000+ deltagere).
+BIAS: pulsoximetre overser oftere iltmangel ved mørk hud (Sjoding 2020) – melanin absorberer også lys.
+OVERGANG: "Men hvorfor er iltmætningen så stabil, at selv et lille fald er mistænkeligt? Det er kemi."
+""", subtitle="88 målinger · 8 hemmelige fejlmålinger (neglelak, kold finger, bevægelse, lys udefra)")
 example_tag(sh, 10.1 * IN, 0.4 * IN)
-import random as _r  # noqa: E402
-rnd = _r.Random(5)
-normal = [round(rnd.gauss(74, 8)) for _ in range(22)]
-pts_norm = [(i + 1, v) for i, v in enumerate(normal)]
-anom = [(23, 104), (24, 112)]
-from pptx.chart.data import XyChartData  # noqa: E402
-from pptx.enum.chart import XL_CHART_TYPE, XL_MARKER_STYLE  # noqa: E402
-cd = XyChartData()
-s1 = cd.add_series("Normale målinger")
-for px, py in pts_norm:
-    s1.add_data_point(px, py)
-s2 = cd.add_series("Afvigelse (|z| > 2)")
-for px, py in anom:
-    s2.add_data_point(px, py)
-s3 = cd.add_series("Øvre grænse (x̄ + 2s)")
-for px in (0, 25):
-    s3.add_data_point(px, 90)
-s4 = cd.add_series("Nedre grænse (x̄ − 2s)")
-for px in (0, 25):
-    s4.add_data_point(px, 58)
-gf = sh.add_chart(XL_CHART_TYPE.XY_SCATTER, Emu(int(0.5 * IN)), Emu(int(1.4 * IN)), Emu(int(6.6 * IN)),
-                  Emu(int(4.3 * IN)), cd)
-chx = gf.chart
+models = [("A", "Gruppemodel", "normal = hele gruppens gennemsnit ± 2s", "som et apparat med faste grænser", tint(PURPLE, 0.35)),
+          ("B", "Personlig model", "normal = personens egne målinger i samme situation", "som et smartwatch, der lærer dig", PURPLE)]
+for i, (k, name, rule, like, c) in enumerate(models):
+    y = 1.85 * IN + i * 1.35 * IN
+    rect(sh, 0.6 * IN, y, 5.6 * IN, 1.2 * IN, fill=tint(c, 0.85))
+    rect(sh, 0.6 * IN, y, 1.0 * IN, 1.2 * IN, fill=c)
+    text(sh, 0.6 * IN, y, 1.0 * IN, 1.2 * IN, k, size=36, bold=True, color=WHITE, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+    text(sh, 1.8 * IN, y + 0.08 * IN, 4.3 * IN, 1.1 * IN,
+         [(name, {"bold": True, "size": 18}), (rule, {"size": 14}), (like, {"size": 12, "color": GREY})], line_spacing=0.95)
+rows = [["", "Model A", "Model B"], ["Fejlmålinger fundet", "4 af 8", "8 af 8"], ["Falske alarmer", "4", "2"],
+        ["– heraf 'efter aktivitet'", "4", "2"], ["Sensitivitet", "50 %", "100 %"], ["Specificitet", "95 %", "98 %"]]
+table(sh, 0.6 * IN, 4.65 * IN, 5.6 * IN, 2.2 * IN, rows, PURPLE, size=13, col_widths=[2.6, 1.5, 1.5], first_col_bold=True)
+cd2 = CategoryChartData()
+cd2.categories = ["Sensitivitet", "Specificitet"]
+cd2.add_series("Model A (gruppe)", (0.50, 0.95))
+cd2.add_series("Model B (personlig)", (1.00, 0.975))
+gf = sh.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Emu(int(6.5 * IN)), Emu(int(1.4 * IN)), Emu(int(6.3 * IN)),
+                  Emu(int(3.6 * IN)), cd2)
+c2 = gf.chart
 from fffo_design import _style_chart  # noqa: E402
-_style_chart(chx, "Hvilepuls i klassen (slag/min)", 12, True)
-for i, (c, mk) in enumerate(((FYS, True), (KEM, True), (GREY, False), (GREY, False))):
-    ser = chx.series[i]
-    if mk:
-        ser.format.line.fill.background()
-        ser.marker.style = XL_MARKER_STYLE.CIRCLE
-        ser.marker.size = 9 if i == 0 else 13
-        ser.marker.format.fill.solid()
-        ser.marker.format.fill.fore_color.rgb = c
-        ser.marker.format.line.color.rgb = c
-    else:
-        ser.marker.style = XL_MARKER_STYLE.NONE
-        ser.format.line.color.rgb = c
-        ser.format.line.width = Pt(2)
-        from pptx.enum.dml import MSO_LINE_DASH_STYLE
-        ser.format.line.dash_style = MSO_LINE_DASH_STYLE.DASH
-chx.value_axis.minimum_scale = 40
-chx.value_axis.maximum_scale = 120
-chx.category_axis.minimum_scale = 0
-chx.category_axis.maximum_scale = 25
-levels = [("1. Regel", "Alarm hvis SpO₂ < 92 %", "simpel – kender ikke personen"),
-          ("2. Statistik", "z = (x − x̄) / s   ·   afvigelse hvis |z| > 2", "vores Excel-model"),
-          ("3. Maskinlæring", "lærer DIN normal + bevægelse + mønstre i PPG-kurven", "smartwatch, hospital")]
-for i, (name, desc, ex) in enumerate(levels):
-    y = 1.45 * IN + i * 1.05 * IN
-    rect(sh, 7.35 * IN, y, 5.35 * IN, 0.92 * IN, fill=tint(FYS, 0.88 - i * 0.12))
-    text(sh, 7.5 * IN, y + 0.06 * IN, 5.1 * IN, 0.85 * IN,
-         [[(name + ":  ", {"bold": True, "color": FYS}), (desc, {"bold": True})], (ex, {"size": 12, "color": GREY})],
-         size=14)
-label_box(sh, 7.35 * IN, 4.65 * IN, 5.35 * IN, 2.15 * IN, "Men pas på",
-          ["• Høj puls efter løb er normal – modellen mangler kontekst",
-           "• Bias: pulsoximetre overser oftere iltmangel ved mørk hud (Sjoding 2020)"], KEM, size=13)
-text(sh, 0.6 * IN, 5.85 * IN, 6.5 * IN, 1.0 * IN,
-     [[("Apple Heart Study (2019): ", {"bold": True}),
-       ("over 400.000 deltagere – uret kunne advare om uregelmæssig hjerterytme (atrieflimren).", {})]],
-     size=14)
+_style_chart(c2, "AI-blindtest", 12, True)
+c2.value_axis.maximum_scale = 1
+c2.value_axis.minimum_scale = 0
+c2.value_axis.tick_labels.number_format = "0%"
+c2.value_axis.tick_labels.number_format_is_linked = False
+c2.plots[0].has_data_labels = True
+c2.plots[0].data_labels.number_format = "0%"
+c2.plots[0].data_labels.number_format_is_linked = False
+c2.plots[0].data_labels.font.size = Pt(13)
+c2.plots[0].data_labels.font.bold = True
+c2.plots[0].gap_width = 70
+for i, cc in enumerate((tint(PURPLE, 0.45), PURPLE)):
+    c2.series[i].format.fill.solid()
+    c2.series[i].format.fill.fore_color.rgb = cc
+label_box(sh, 6.5 * IN, 5.15 * IN, 3.05 * IN, 1.7 * IN, "Pointe",
+          ["• AI skal kende personen og situationen", "• Ligesom smartwatches"], FYS, size=12)
+label_box(sh, 9.7 * IN, 5.15 * IN, 3.0 * IN, 1.7 * IN, "Bias",
+          ["• Pulsoximetre overser oftere iltmangel ved mørk hud (Sjoding 2020)"], KEM, size=12)
 
 # ============================================================================ 14 HÆMOGLOBIN
 s, sh, col = new_slide("kem", "Hæmoglobin – blodets iltbærer", """
@@ -567,10 +568,10 @@ text(sh, 8.15 * IN, 4.5 * IN, 2.1 * IN, 0.4 * IN, "muskel ≈ 31 %", size=13, bo
 # ============================================================================ 16 BOHR + FORKLARING
 s, sh, col = new_slide("kem", "Bohr-effekten forklarer vores resultater", """
 P3 (1:15): Arbejde → mere respiration → mere CO₂ + varme. CO₂ + H₂O → kulsyre → blodet bliver surere.
-BTB: efter trappeløb gul på __ s mod __ s i hvile.
-BOHR-EFFEKTEN: surt + varmt → Hb slipper ilten lettere → kurven forskydes mod højre → ilten havner hvor musklerne arbejder.
-VORES RESULTATER: Puls ↑ fordi blodet skal cirkulere hurtigere. SpO₂ ≈ uændret fordi pulsoximeteret måler ARTERIEBLODET, der lige har været i lungerne (flad top). Faldet sker i VENEBLODET – det måler pulsoximeteret ikke.
-OVERGANG: "Teknologien virker på os – men virker den lige godt for alle i verden? Det tager [P4] sig af."
+BOHR-EFFEKTEN: surt + varmt → Hb slipper ilten lettere → kurven forskydes mod højre → ilten havner, hvor musklerne arbejder.
+VORES RESULTATER: Pulsen var højest efter aktivitet (ca. 131), fordi blodet skal cirkulere hurtigere.
+SpO₂ var stabil (97–98 %) i ALLE situationer, fordi pulsoximeteret måler ARTERIEBLODET, der lige har været i lungerne – flad top på kurven + hurtigere vejrtrækning. Faldet i ilt sker i VENEBLODET – det måler pulsoximeteret ikke.
+Derfor er selv et lille fald i SpO₂ et vigtigt faresignal – og derfor kunne AI'en finde fejlmålingerne.
 """)
 text(sh, 0.6 * IN, 1.4 * IN, 6.2 * IN, 1.2 * IN,
      [("C₆H₁₂O₆ + 6 O₂ → 6 CO₂ + 6 H₂O + energi", {"bold": True, "size": 19}),
@@ -582,14 +583,52 @@ xy_chart(sh, 0.5 * IN, 2.55 * IN, 6.3 * IN, 4.35 * IN,
          [KEM, PURPLE], x_min=0, x_max=15, y_min=0, y_max=100, size=11, x_title="pO₂ (kPa)",
          y_title="iltmætning (%)", title="Bohr-effekten: kurven forskydes mod højre", dashed=[False, True])
 rows = [["Observation", "Forklaring"],
-        ["Pulsen steg (72 → 156)", "Musklerne skal have mere O₂ og af med CO₂ → hjertet pumper hurtigere"],
-        ["SpO₂ næsten uændret (98 → 97 %)", "Måler arterieblod fra lungerne · flad top på kurven · hurtigere vejrtrækning"],
+        ["Puls højest efter aktivitet (66 → 131)", "Musklerne skal have mere O₂ og af med CO₂ → hjertet pumper hurtigere"],
+        ["SpO₂ stabil 97–98 % i alle situationer", "Måler arterieblod fra lungerne · flad top på kurven · hurtigere vejrtrækning"],
         ["Iltforbruget ses ikke", "Ilten afgives i musklerne → faldet sker i veneblodet, som ikke måles"],
-        ["BTB gul hurtigere efter arbejde", "Mere CO₂ udåndet → mere kulsyre → lavere pH"]]
-table(sh, 7.05 * IN, 1.45 * IN, 5.65 * IN, 4.4 * IN, rows, KEM, size=13, col_widths=[2.0, 3.65], first_col_bold=True)
-example_tag(sh, 7.05 * IN, 6.05 * IN, w=2.8)
-text(sh, 9.95 * IN, 6.0 * IN, 2.8 * IN, 0.8 * IN, "BTB: hvile __ s · arbejde __ s", size=14, bold=True, color=KEM,
-     anchor=MSO_ANCHOR.MIDDLE)
+        ["Fejlmålinger gav lav SpO₂", "Fysik, ikke kemi: neglelak/kulde ændrer lyset – ikke ilten"]]
+table(sh, 7.05 * IN, 1.45 * IN, 5.65 * IN, 4.4 * IN, rows, KEM, size=13, col_widths=[2.1, 3.55], first_col_bold=True)
+rect(sh, 7.05 * IN, 6.0 * IN, 5.65 * IN, 0.85 * IN, fill=tint(KEM, 0.85), shape=MSO_SHAPE.ROUNDED_RECTANGLE)
+text(sh, 7.25 * IN, 6.0 * IN, 5.3 * IN, 0.85 * IN,
+     [[("Derfor: ", {"bold": True, "color": KEM}), ("SpO₂ er så stabil, at selv et lille fald er et vigtigt faresignal.", {})]],
+     size=15, anchor=MSO_ANCHOR.MIDDLE)
+
+# ============================================================================ 17 BLÅ FLASKE
+s, sh, col = new_slide("kem", "Kemiforsøg: Den blå flaske – ilt ind, ilt brugt", """
+P3 (1:00): Den blå flaske er vores model af iltoptag og iltforbrug. Glukose gør farvestoffet methylenblåt farveløst. Når vi ryster, opløses ilt fra luften → blå igen. Når ilten er brugt → farveløs.
+Rystning = lungerne. Glukose der bruger ilten = respiration i musklerne. Blå = iltet blod.
+RESULTAT: tid til farveløs: ca. 62 s ved 20 °C, 33 s ved 30 °C, 17 s ved 40 °C – varmere = hurtigere forbrug (som arbejdende muskler).
+"Hold den blå": ved 40 °C skulle vi ryste 5 gange mod 2 gange ved 20 °C – ligesom vi trækker vejret hurtigere under arbejde. Så længe tilførslen følger med, forbliver flasken blå = SpO₂ stabil!
+BEGRÆNSNING: methylenblåt reagerer kemisk med ilten (oxideres) – hæmoglobin binder den løst. Ingen S-kurve eller pH-effekt.
+OVERGANG: "Teknologien virker på os – men virker den lige godt for alle i verden? Det tager [P4] sig af."
+""", subtitle="Methylenblåt + glukose: blå = ilt til stede · farveløs = ilten er brugt")
+example_tag(sh, 10.1 * IN, 0.4 * IN)
+rows = [["I flasken", "I kroppen"], ["Rystning: ilt opløses", "Lungerne: ilt optages"], ["Glukose bruger ilten", "Respiration i musklerne"],
+        ["Blå", "Iltet blod (HbO₂)"], ["Farveløs", "Blod uden ilt (Hb)"], ["Varmt vand", "Arbejdende, varm muskel"]]
+table(sh, 0.6 * IN, 1.85 * IN, 4.6 * IN, 3.3 * IN, rows, KEM, size=14, first_col_bold=True)
+flasks = [("blå", RGBColor(0x2F, 0x5F, 0xD0)), ("farveløs", RGBColor(0xEE, 0xF1, 0xF6))]
+for i, (lbl, c) in enumerate(flasks):
+    x = 0.85 * IN + i * 2.2 * IN
+    fl = rect(sh, x, 5.35 * IN, 1.4 * IN, 1.1 * IN, fill=c, line=GREY, shape=MSO_SHAPE.FLOWCHART_EXTRACT)
+    text(sh, x - 0.2 * IN, 6.45 * IN, 1.8 * IN, 0.4 * IN, lbl, size=13, bold=True, color=GREY, align=PP_ALIGN.CENTER)
+arrow(sh, 2.35 * IN, 5.75 * IN, 2.95 * IN, 5.75 * IN, color=KEM, width=2.5)
+arrow(sh, 2.95 * IN, 6.1 * IN, 2.35 * IN, 6.1 * IN, color=FYS, width=2.5)
+text(sh, 2.15 * IN, 5.3 * IN, 1.1 * IN, 0.4 * IN, "ilt brugt", size=11, color=KEM, align=PP_ALIGN.CENTER)
+text(sh, 2.15 * IN, 6.15 * IN, 1.1 * IN, 0.4 * IN, "ryst", size=11, color=FYS, align=PP_ALIGN.CENTER)
+line_chart(sh, 5.4 * IN, 1.45 * IN, 4.3 * IN, 4.1 * IN, ["20 °C", "30 °C", "40 °C"], [("Gns. tid til farveløs (s)", (61.7, 32.7, 16.7))],
+           [KEM], y_min=0, y_max=70, title="Tid til farveløs (s)", size=12, legend=False)
+rect(sh, 9.95 * IN, 1.6 * IN, 2.75 * IN, 2.0 * IN, fill=tint(FYS, 0.85), shape=MSO_SHAPE.ROUNDED_RECTANGLE)
+text(sh, 9.95 * IN, 1.6 * IN, 2.75 * IN, 2.0 * IN,
+     [("'Hold den blå' i 1 min", {"bold": True, "size": 14, "color": FYS}), ("20 °C: 2 rystninger", {"size": 16, "bold": True}),
+      ("40 °C: 5 rystninger", {"size": 16, "bold": True}), ("= hurtigere vejrtrækning", {"size": 12, "color": GREY})],
+     align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+label_box(sh, 9.95 * IN, 3.8 * IN, 2.75 * IN, 1.75 * IN, "Begrænsning",
+          ["• Methylenblåt oxideres – Hb binder ilt løst", "• Ingen S-kurve"], GREY, size=11)
+rect(sh, 5.4 * IN, 5.75 * IN, 7.3 * IN, 1.1 * IN, fill=tint(KEM, 0.85), shape=MSO_SHAPE.ROUNDED_RECTANGLE)
+text(sh, 5.6 * IN, 5.75 * IN, 7.0 * IN, 1.1 * IN,
+     [[("Pointe: ", {"bold": True, "color": KEM}),
+       ("Så længe iltoptaget følger med forbruget, forbliver flasken blå. På samme måde forbliver SpO₂ stabil under arbejde.", {})]],
+     size=15, anchor=MSO_ANCHOR.MIDDLE)
 
 # ============================================================================ 17 GEOGRAFI FAKTORER
 s, sh, col = new_slide("geo", "Hvem får gavn af AI? Seks faktorer", """

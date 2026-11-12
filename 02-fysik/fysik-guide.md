@@ -1,7 +1,7 @@
 # 2. Fysik – Pulsoximeteret: lys, puls, iltmætning og AI
 
 > **Underspørgsmål:** Hvordan måler en pulsoximeter puls og iltmætning ved hjælp af lys, og hvordan kan AI bruge den slags data til at opdage afvigelser?
-> **Forsøg:** Ugeforsøg om puls og iltmætning (hvile → arbejde → restitution) + delforsøg om fejlkilder.
+> **Forsøg:** Ugeforsøg "Find din egen normal": (1) byg en pulsmåler med mobilkameraet og (2) en 5-dages måledagbog med AI-blindtest.
 
 ---
 
@@ -110,7 +110,7 @@ En **afvigelse** (anomali) er en måling, der ikke passer til det normale mønst
 
 **Trin 1: Regelbaseret.** Det gør et almindeligt apparat: "Alarm, hvis SpO₂ < 92 % eller puls > 120 i hvile". Det er simpelt, men det kender ikke personen eller situationen.
 
-**Trin 2: Statistisk model** (det laver I selv i regnearket). Ud fra mange målinger på raske personer findes:
+**Trin 2: Statistisk model** (det laver regnearket på jeres måledagbog). Ud fra mange målinger på raske personer findes:
 - **middelværdien** \(\bar{x}\)
 - **standardafvigelsen** \(s\), som viser, hvor meget målingerne normalt spreder sig
 
@@ -118,7 +118,7 @@ Ca. 95 % af normale målinger ligger inden for \(\bar{x} \pm 2s\). En måling ud
 \[ z = \frac{x - \bar{x}}{s} \]
 Hvis \(|z| > 2\), markeres målingen som en afvigelse.
 
-*Eksempel:* Klassens hvilepuls har \(\bar{x} = 74\) og \(s = 9\). En elev har 102. \(z = (102 - 74)/9 = 3{,}1\), så det er en afvigelse.
+*Eksempel:* Gruppens puls har \(\bar{x} = 74\) og \(s = 9\). En elev har 102. \(z = (102 - 74)/9 = 3{,}1\), så det er en afvigelse.
 
 **Trin 3: Maskinlæring (rigtig AI).** I smartwatches og på hospitaler trænes modeller på **millioner** af målinger. De lærer:
 - **den enkelte persons normal** (din hvilepuls er måske 58 og ikke 74)
@@ -133,107 +133,128 @@ På hospitaler bruges AI til **tidlig varsling**: Den kombinerer puls, SpO₂, v
 
 ---
 
-## Del B – Ugeforsøg: Puls og iltmætning (trin for trin)
+## Del B – Ugeforsøg: "Find din egen normal" (trin for trin)
 
-### Formål
+### Hvorfor er forsøget bygget sådan?
 
-At undersøge, hvordan **puls** og **iltmætning** ændrer sig fra **hvile → fysisk arbejde → restitution**. Derudover at undersøge, hvilke faktorer der giver **fejlmålinger**, og at bygge en simpel **afvigelsesmodel**.
+Hos raske personer ændrer **iltmætningen sig næsten ikke**, heller ikke ved hårdt arbejde (det forklarer kemien). Et forsøg, der kun måler "før og efter løb", giver derfor kedelige SpO₂-data. I stedet undersøger I de tre ting, jeres problemformulering faktisk spørger om:
 
-### Hypoteser (eksempler; skriv jeres egne, *før* I måler)
+| Delforsøg | Hvad undersøger I? | Svarer på |
+|---|---|---|
+| **1. Byg en pulsmåler med mobilen** (dag 1) | Hvordan lys gennem fingeren afslører pulsen, og hvorfor forskellige farver lys opfører sig forskelligt | *Hvordan måler en pulsoximeter puls ved hjælp af lys?* |
+| **2. Måledagbog med AI-blindtest** (dag 1–5) | Hvad der er "normalt" for hver af jer, og om en AI-model kan finde de målinger, der er forkerte | *Hvordan kan AI bruge data til at opdage afvigelser?* |
+| **3. Den blå flaske** (dag 2, se kemiguiden) | En model af, hvordan ilt bindes og forbruges | *Kemi: hvorfor ændrer iltmætningen sig (ikke)?* |
 
-1. Pulsen stiger kraftigt ved arbejde og falder igen i restitutionsperioden.
-2. Iltmætningen ændrer sig **kun lidt** (forbliver over 95 %), fordi lungerne kan nå at mætte blodet med ilt. *Kemien forklarer hvorfor.*
-3. Kolde fingre, neglelak og bevægelse giver dårligere eller forkerte målinger.
+### Hypoteser (skriv jeres egne, *før* I måler)
 
-### Variable
-
-| Type | I dette forsøg |
-|---|---|
-| Uafhængig variabel (det, I ændrer) | Aktivitetsniveau (hvile/arbejde) og tid efter arbejde |
-| Afhængige variable (det, I måler) | Puls (slag/min) og SpO₂ (%) |
-| Kontrolvariable (holdes ens) | Samme finger, samme apparat, siddende stilling ved målingen, rolig hånd, samme type arbejde og varighed |
+1. Mobilkameraet kan måle den samme puls som pulsoximeteret (±5 slag/min), fordi blodet absorberer lys i takt med hjerteslagene.
+2. Rødt lys slipper bedst gennem fingeren, mens blåt lys næsten bliver helt absorberet.
+3. Pulsen varierer meget mellem situationer (hvile/aktivitet), men iltmætningen ligger stabilt på 95–100 %.
+4. En AI-model, der kender **personen og situationen**, finder flere fejlmålinger og giver færre falske alarmer end en model, der bare bruger hele gruppens gennemsnit.
 
 ### Materialer
 
-Pulsoximeter, stopur, trappe/step-bænk/sjippetov, lommelygte, mørk neglelak, skål med koldt vand, regnearket `skabeloner/maaleskema.xlsx`.
+- 1–2 pulsoximetre (fingerclips)
+- Mobiltelefoner med kamera og lommelygte
+- Computer med Chrome eller Edge og analyseværktøjet **`02-fysik/ppg-analyse/index.html`** (åbn filen ved at dobbeltklikke, og det virker uden internet)
+- Regnearket `skabeloner/maaleskema.xlsx` (fanerne **Mobil-PPG** og **Måledagbog**)
+- Mørk neglelak + neglelakfjerner, skål med koldt vand (til fejlmålingerne)
 
-### Forsøg 1 – Hvile (alle personer)
+---
 
-1. Forsøgspersonen sidder stille i **5 minutter**.
-2. Sæt pulsoximeteret på **pegefingeren** og hold hånden i ro på bordet i hjertehøjde.
-3. Vent, til tallet er stabilt (ca. 10–15 sekunder).
-4. Aflæs **puls og SpO₂ 3 gange** med 30 sekunders mellemrum, og skriv dem i fanen **"Hvile"**.
-5. Regnearket finder gennemsnittet.
+### Delforsøg 1 – Byg en pulsmåler med mobilen (ca. 45 min)
 
-### Forsøg 2 – Arbejde og restitution (alle personer)
+**Ideen:** Mobilens lommelygte sender hvidt lys (alle farver) ind i fingeren, og kameraet måler, hvor meget der slipper igennem. Hver gang hjertet slår, kommer der mere blod i fingeren, og det absorberer lidt mere lys, så billedet bliver en anelse mørkere. Det er præcis det, et pulsoximeter gør, bare med rødt og infrarødt lys.
 
-1. Forsøgspersonen laver **3 minutters arbejde**: trappeløb, step-test (op/ned ad en bænk i fast tempo, fx 30 gange pr. minut) eller sjip. **Alle i gruppen skal lave det samme.**
-2. **Lige efter** (t = 0) sætter forsøgspersonen sig ned, og I sætter oximeteret på med det samme.
-3. Aflæs puls og SpO₂ ved **0, 30, 60, 90, 120, 180, 240 og 300 sekunder**.
-4. Skriv det i fanen **"Arbejde og restitution"**. Grafen tegnes automatisk.
-5. **Restitutionstid:** Notér, hvor lang tid der går, før pulsen er under *hvilepuls + 10*.
+**Fremgangsmåde**
 
-> Tip: Én person er forsøgsperson, én aflæser, én styrer stopuret, og én skriver. Byt roller.
+1. Forsøgspersonen sidder ned og har siddet stille i 3 minutter.
+2. Sæt pulsoximeteret på **venstre** pegefinger.
+3. Tænd mobilens **lommelygte**, og start **videooptagelse** med bagkameraet.
+4. Læg **højre** pegefinger **let** over både kamera og lommelygte. Skærmen bliver rød.
+5. Optag i **30 sekunder**, og hold hånden **helt stille** på bordet. En anden aflæser pulsoximeterets puls 3 gange undervejs.
+6. Overfør videoen til computeren (AirDrop, mail, Google Drev eller kabel).
+7. Åbn `ppg-analyse/index.html`, klik **Vælg video**, og vent, mens videoen afspilles.
+8. Skriv resultaterne i fanen **Mobil-PPG**: pulsen fra mobilen og fra oximeteret, samt **DC** og **AC/DC** for rød, grøn og blå.
+9. Gentag for alle i gruppen.
 
-### Forsøg 3 – Fejlkilder (fysikken i praksis)
+**Varianter** (ét forsøg pr. variant, på samme person):
 
-Mål på én person i hvile. Først en normal måling, derefter én ændring ad gangen:
-
-| Delforsøg | Fremgangsmåde | Hvad forventer I? |
+| Variant | Gør sådan | Hvad forventer I? |
 |---|---|---|
-| a. Bevægelse | Ryst hånden let under målingen | Svingende eller forkert puls |
-| b. Kold finger | Hånden i koldt vand i 1 min, tør, og mål | Langsommere og svagere signal |
-| c. Neglelak | Mørk neglelak på neglen, lad tørre, og mål | Lavere eller ingen måling |
-| d. Lys udefra | Lys med lommelygten direkte på klemmen | Forstyrret måling |
-| e. Klem/tryk | Tryk fingeren hårdt mod bordet | Svagere AC-signal (mindre blodgennemstrømning) |
+| a. Tryk hårdt | Pres fingeren hårdt mod kameraet | Blodet presses ud, så AC-signalet bliver mindre |
+| b. Kold finger | Fingeren i koldt vand i 1 min, tør, og optag | Sammentrukne blodkar giver et svagere signal |
+| c. Bevægelse | Bevæg hånden lidt under optagelsen | Falske "slag", som værktøjet markerer som uregelmæssige |
+| d. Efter aktivitet | Optag lige efter 1 min trappeløb | Højere puls, som mobilen også bør kunne se |
 
-Notér både tal og **hvor lang tid** apparatet var om at finde et signal.
+**Det skal I lægge mærke til (fysikken):**
+- **DC for blå** er næsten 0, fordi blåt lys absorberes næsten fuldstændigt af blod og væv. **Rød** har høj DC, fordi rødt lys slipper bedst igennem. Det er derfor, fingeren lyser rødt.
+- **Absorptionen afhænger af bølgelængden.** Det er hele grundideen bag pulsoximeteret: Det bruger to bølgelængder (660 og 940 nm), fordi Hb og HbO₂ absorberer dem forskelligt.
+- **Mobilen kan ikke måle iltmætning**, fordi den mangler infrarødt lys og er ikke kalibreret. Det er en vigtig pointe om, hvorfor et rigtigt apparat har netop de to LED'er.
 
-### Forsøg 4 – Demo: Se lyset gå gennem fingeren (godt til prøven!)
+**Fejlkilder:** Kameraets automatiske justering af lys og farve, bevægelse, for hårdt tryk, og at videoen kan være komprimeret.
 
-1. Gør rummet mørkt.
-2. Hold en finger over mobilens lommelygte.
-3. Fingeren lyser **rødt**, fordi rødt lys trænger meget bedre gennem væv og blod end blåt og grønt lys. Blod absorberer de andre farver.
-4. **Bonus:** Læg fingeren over både kamera og blitz på en mobil og åbn kameraet (eller en pulsmåler-app). Billedet flimrer svagt i takt med pulsen. Det er præcis PPG-princippet!
+---
 
-### Forsøg 5 (valgfrit) – Klassedata og AI-afvigelsesmodel
+### Delforsøg 2 – Måledagbog med AI-blindtest (dag 1–5, ca. 5 min om dagen)
 
-1. Saml alle gruppers **hvilepuls og hvile-SpO₂** i fanen **"Klassedata og afvigelser"** (jo flere, jo bedre).
-2. Regnearket beregner middelværdi, standardafvigelse og **normalområdet** \(\bar{x} \pm 2s\).
-3. Hver måling får en **z-værdi** og bliver markeret "AFVIGELSE", hvis \(|z| > 2\).
-4. Indsæt bevidst en "syg" eller fejlmålt værdi (fx SpO₂ = 88 % fra neglelak-forsøget), og vis, at modellen fanger den.
-5. Diskutér: Er pulsen *lige efter arbejde* en afvigelse? Modellen siger ja, men det er jo normalt! Pointen er, at **AI'en skal kende sammenhængen**. Det er derfor, smartwatches også bruger bevægelsessensoren.
+**Ideen:** Rigtig AI i et smartwatch kender **din** normal og **situationen** (sover du, eller løber du?). I samler jeres egne data i 5 dage og tester, om en model kan skelne mellem *normal variation* og *forkerte målinger*.
 
-> **Sikkerhed:** Hold aldrig vejret for at få iltmætningen ned. Det er ikke nødvendigt for forsøget, og hos raske personer falder SpO₂ alligevel næsten ikke ved kort vejrholdning.
+**Fremgangsmåde**
 
-### Databehandling
+1. Hver person måler **puls og SpO₂ 4 gange om dagen** i 5 dage, altid siddende og med hånden i ro i 30 sekunder, før I aflæser:
 
-1. **Graf 1:** Puls (y) mod tid efter arbejde (x) for alle i gruppen.
-2. **Graf 2:** SpO₂ (y) mod tid efter arbejde (x). Sæt y-aksen fra 90 til 100 %, så I kan se de små ændringer, men sig det højt, når I viser den.
-3. **Tabel:** Hvile vs. lige efter arbejde (gennemsnit for gruppen).
-4. **Udregn** ændringen i puls i % og ændringen i SpO₂ i procentpoint.
+| Situation | Hvornår |
+|---|---|
+| **Morgen – hvile** | Lige efter I er stået op, inden morgenmad |
+| **Skole – siddende** | I en time, efter I har siddet i 10 min |
+| **Efter aktivitet** | Lige efter idræt, cykling til skole eller 2 min trappeløb |
+| **Aften – hvile** | Inden sengetid |
 
-### Typiske resultater (så I ved, hvad I kan forvente)
+2. Skriv hver måling ind i fanen **Måledagbog**: person, dag, situation, puls og SpO₂.
+3. **Blindtesten:** Hver person laver i løbet af ugen **2 bevidste fejlmålinger**, fx med neglelak, kold finger, en finger der bevæger sig, eller lommelygtelys på klemmen. Skriv dem ind som almindelige målinger. **En anden i gruppen** noterer i kolonnen **"Fejlmåling? (facit)"**, hvilke det var. Det er ligesom testbillederne i biologi: Modellen må ikke kende svaret.
+4. Efter 5 dage har hver person ca. 20 målinger, og gruppen har ca. 80.
 
-| | Hvile | Lige efter arbejde | Efter 5 min |
-|---|---|---|---|
-| Puls | 65–85 | 130–180 | tæt på hvile + 10–20 |
-| SpO₂ | 96–99 % | 94–99 % (ofte uændret eller **lidt** lavere) | 96–99 % |
+**Analyse (regnearket gør det automatisk)**
 
-> Hvis SpO₂ falder til fx 93 % lige efter arbejde, så tjek, om hånden var i ro. Bevægelse og kolde, sammentrukne blodkar er de hyppigste årsager til et "fald" lige efter arbejde. Det er en vigtig fejlkildediskussion.
+Regnearket kører **to AI-modeller** på jeres data og sammenligner dem med facit:
 
-### Fejlkilder (sammenfatning)
+| | **Model A: Gruppemodel** | **Model B: Personlig model** |
+|---|---|---|
+| Hvad er "normalt"? | Hele gruppens gennemsnit og spredning | Personens **egne** målinger i **samme situation** |
+| Afvigelse når | \|z\| > 2 for puls eller SpO₂ | \|z\| > 2 for puls eller SpO₂ |
+| Ligner | Et simpelt apparat med fast alarmgrænse | Et smartwatch, der lærer dig at kende |
 
-- Måleusikkerhed på ca. ±2 procentpoint for SpO₂ og ±1–2 slag for puls
-- Bevægelse og nervøsitet lige efter arbejdet
-- Forskellig tid fra stop til første måling
-- Forsøgspersonerne arbejdede ikke lige hårdt
-- Få forsøgspersoner (4), så der er stor tilfældighed
-- Billigt apparat, der ikke er medicinsk kalibreret
+For hver model beregner regnearket **sensitivitet** (hvor mange af fejlmålingerne den fandt) og **specificitet** (hvor mange normale målinger den lod være). Det er præcis de samme mål som i jeres AI-forsøg med hudbilleder i biologi.
+
+**Typiske resultater (så I ved, hvad I kan forvente)**
+
+| | Morgen | Skole | Efter aktivitet | Aften |
+|---|---|---|---|---|
+| Puls | 55–75 | 65–85 | 100–150 | 60–80 |
+| SpO₂ | 96–99 % | 96–99 % | 95–99 % | 96–99 % |
+
+- **Gruppemodellen** giver typisk **falske alarmer** ved "efter aktivitet", fordi en høj puls ser unormal ud i forhold til gruppens gennemsnit. Den overser også fejlmålinger hos en person, der normalt har lav puls.
+- **Den personlige model** finder typisk **flere** fejlmålinger og giver **færre** falske alarmer, fordi den kender personen og situationen.
+- **SpO₂ ændrer sig næsten ikke** mellem situationerne. Derfor er selv et lille fald (fx 99 → 94 %) mistænkeligt, og det er netop derfor, iltmætning er et godt faresignal (se kemi).
+
+### Sikkerhed
+
+- Fysisk aktivitet kun så hårdt, som man selv har det godt med.
+- Hold **aldrig** vejret for at få iltmætningen ned. Det er ikke en del af forsøget.
+- Neglelakfjerner bruges i et udluftet lokale.
+
+### Databehandling – det skal med i præsentationen
+
+1. **Mobil-PPG:** Puls fra mobilen sammenlignet med pulsoximeteret (tabel), plus et skærmbillede af kurven fra analyseværktøjet.
+2. **Søjlediagram:** gennemsnitlig puls og SpO₂ i hver situation (laves automatisk i regnearket).
+3. **AI-sammenligning:** sensitivitet og specificitet for model A og model B.
 
 ### Konklusion (skabelon)
 
-> "Pulsen steg fra gennemsnitligt __ til __ slag/min (__ %) og var tilbage nær hvileniveau efter ca. __ minutter. Iltmætningen ændrede sig kun fra __ % til __ %, altså inden for apparatets usikkerhed. Pulsoximeteret måler dette ved at sende rødt (660 nm) og infrarødt (940 nm) lys gennem fingeren og sammenligne, hvor meget der absorberes af iltet og ikke-iltet hæmoglobin i det pulserende arterieblod. Vores afvigelsesmodel kunne finde unormale målinger, men den kunne ikke skelne mellem sygdom, fejlmåling og normal høj puls efter arbejde. Det kræver mere data og information om sammenhængen, og det er netop dét, rigtig AI kan."
+> "Med mobilkameraet kunne vi se pulsen som små udsving i lysstyrken: __ slag/min mod __ slag/min på pulsoximeteret. Blåt lys blev næsten helt absorberet (DC ≈ __), mens rødt lys slap bedst igennem. Det viser, at absorptionen afhænger af bølgelængden, og det er derfor, pulsoximeteret bruger rødt og infrarødt lys.
+> I måledagbogen varierede pulsen fra ca. __ (morgen) til __ (efter aktivitet), mens SpO₂ lå stabilt mellem __ og __ %.
+> Gruppemodellen fandt __ af __ fejlmålinger og gav __ falske alarmer. Den personlige model fandt __ af __ og gav __ falske alarmer. Det viser, at AI bliver bedre til at opdage afvigelser, når den kender personens egen normal og situationen. Det er præcis det, smartwatches og hospitalernes overvågningssystemer gør."
 
 ---
 

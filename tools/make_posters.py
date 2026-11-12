@@ -149,20 +149,19 @@ text(sh, X2, y, half, 1.5 * IN, [("E = h·c / λ", {"size": 28, "bold": True}), 
                                   ("SpO₂ ≈ 110 − 25·R", {"size": 18})], color=WHITE, align=PP_ALIGN.CENTER,
      anchor=MSO_ANCHOR.MIDDLE, line_spacing=0.95)
 y += 1.85 * IN
-heading(sh, M, y, CW, "Ugeforsøg: puls og SpO₂", FYS)
+heading(sh, M, y, CW, "Ugeforsøg: Find din egen normal", FYS)
 tag_example(sh, W - M - 2.9 * IN, y + 0.1 * IN)
-cats = ["hvile", "0 s", "30 s", "60 s", "90 s", "120 s", "180 s", "240 s", "300 s"]
-line_chart(sh, M, y + 0.65 * IN, half, 2.85 * IN, cats, [("Puls", (72, 156, 142, 128, 117, 108, 96, 88, 82))], [KEM],
-           y_min=50, y_max=180, title="Puls (slag/min)", legend=False, size=11)
-line_chart(sh, X2, y + 0.65 * IN, half, 2.85 * IN, cats, [("SpO₂", (98, 97, 97, 98, 98, 98, 98, 98, 98))], [FYS],
-           y_min=90, y_max=100, title="SpO₂ (%) – y-akse fra 90", legend=False, size=11)
+bar_chart(sh, M, y + 0.65 * IN, half, 2.85 * IN, ["rød", "grøn", "blå"], (235, 40, 5), FYS, title="Mobil-PPG: lys gennem fingeren (DC)",
+          size=11, y_max=255, point_colors=[KEM, BIO, FYS])
+bar_chart(sh, X2, y + 0.65 * IN, half, 2.85 * IN, ["Morgen", "Skole", "Efter akt.", "Aften"], (66, 73, 131, 69), PURPLE,
+          title="Måledagbog: gns. puls · SpO₂ stabil 97–98 %", size=11, y_max=150)
 y += 3.65 * IN
-label_box(sh, M, y, half, 1.85 * IN, "AI og afvigelser",
-          ["• Normalt: middel ± 2 standardafvigelser", "• |z| > 2 → afvigelse", "• Smartwatch: lærer DIN normal"], FYS, size=14)
+label_box(sh, M, y, half, 1.85 * IN, "AI-blindtest (8 fejlmålinger)",
+          ["• Gruppemodel: fandt 4 af 8", "• Personlig model: fandt 8 af 8", "• Færre falske alarmer efter aktivitet"], PURPLE, size=14)
 label_box(sh, X2, y, half, 1.85 * IN, "Fejlkilder",
           ["• Bevægelse og kolde fingre", "• Neglelak og lys udefra", "• Mørk hud (bias)"], KEM, size=14)
-conclusion(sh, FYS, "Rødt og infrarødt lys absorberes forskelligt af iltet og ikke-iltet hæmoglobin. Pulsen steg kraftigt ved arbejde, "
-                    "mens SpO₂ næsten var uændret. AI kan finde afvigelser – men skal kende sammenhængen.")
+conclusion(sh, FYS, "Blodet absorberer lys forskelligt afhængigt af bølgelængden – mobilen kunne måle pulsen, men ikke ilten. "
+                    "SpO₂ var stabil, så AI'en fandt fejlmålingerne bedst, når den kendte personens egen normal og situationen.")
 
 # ============================================================================ 3 KEMI
 s, sh = poster(KEM, "KEMI", "Hæmoglobin og ilt",
@@ -181,19 +180,19 @@ text(sh, M, y, CW, 0.9 * IN, "Hb + 4 O₂  ⇌  Hb(O₂)₄", size=32, bold=True
 y += 1.1 * IN
 curve_n = [(p / 4, round(hill(p / 4, 3.6), 2)) for p in range(0, 61)]
 curve_w = [(p / 4, round(hill(p / 4, 4.4), 2)) for p in range(0, 61)]
-xy_chart(sh, M, y, half + 0.6 * IN, 4.1 * IN, [("Hvile", curve_n), ("Arbejde (Bohr-effekt)", curve_w)], [KEM, PURPLE],
-         x_min=0, x_max=15, y_min=0, y_max=100, size=11, x_title="pO₂ (kPa)", y_title="iltmætning (%)",
+xy_chart(sh, M, y, half, 3.4 * IN, [("Hvile", curve_n), ("Arbejde (Bohr)", curve_w)], [KEM, PURPLE],
+         x_min=0, x_max=15, y_min=0, y_max=100, size=10, x_title="pO₂ (kPa)", y_title="iltmætning (%)",
          title="S-formet bindingskurve", dashed=[False, True])
-bullets(sh, X2 + 0.75 * IN, y + 0.2 * IN, half - 0.75 * IN, 4.0 * IN,
-        [("Lunger: ", "meget O₂ → binder (97 %)"), ("Muskler: ", "lidt O₂ → afgiver"),
-         ("Kooperativ: ", "første O₂ gør det lettere for de næste"), ("Bohr: ", "CO₂, H⁺ og varme → slipper ilt lettere")],
-        size=15, bullet_color=KEM)
-y += 4.3 * IN
-text(sh, M, y, CW, 0.8 * IN,
-     [("C₆H₁₂O₆ + 6 O₂ → 6 CO₂ + 6 H₂O        CO₂ + H₂O ⇌ H₂CO₃ ⇌ H⁺ + HCO₃⁻", {"bold": True})], size=18,
-     align=PP_ALIGN.CENTER)
-conclusion(sh, KEM, "Pulsen stiger ved arbejde, men SpO₂ er næsten uændret: pulsoximeteret måler arterieblodet fra lungerne, "
-                    "hvor den flade top af kurven giver næsten fuld mætning. Iltafgivelsen sker i musklerne (Bohr-effekten).")
+line_chart(sh, X2, y, half, 3.4 * IN, ["20 °C", "30 °C", "40 °C"], [("Tid", (61.7, 32.7, 16.7))], [KEM], y_min=0, y_max=70,
+           title="Den blå flaske: tid til farveløs (s)", size=10, legend=False)
+tag_example(sh, W - M - 3.0 * IN, y + 0.6 * IN)
+y += 3.55 * IN
+bullets(sh, M, y, CW, 1.3 * IN,
+        [("Lunger: ", "meget O₂ → Hb binder (97 %) · Muskler: lidt O₂ → afgiver · Bohr: CO₂, H⁺ og varme → slipper ilt lettere"),
+         ("Blå flaske: ", "ryst = ilt ind (lunger), glukose = iltforbrug (respiration). Varmere → hurtigere forbrug → ryst oftere.")],
+        size=14, bullet_color=KEM, gap=0.4)
+conclusion(sh, KEM, "SpO₂ var stabil i alle situationer: Arterieblodet bliver mættet i lungerne (flad top), og vejrtrækningen "
+                    "følger med forbruget – ligesom den blå flaske forbliver blå, når man ryster oftere. Iltafgivelsen sker i musklerne (Bohr).")
 
 # ============================================================================ 4 GEOGRAFI
 s, sh = poster(GEO, "GEOGRAFI", "Hvem får gavn af AI?",

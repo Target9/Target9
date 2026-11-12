@@ -68,183 +68,252 @@ lines = [
     "Gule felter = I skal selv skrive. Blå felter = beregnes automatisk. Graferne opdateres af sig selv.",
     "",
     "Faneblade:",
-    "1. Hvile – 3 målinger pr. person i hvile (fysik-ugeforsøg 1).",
-    "2. Arbejde og restitution – målinger efter 3 min arbejde (ugeforsøg 2). Grønne felter = pulsen er under hvile + 10.",
-    "3. Fejlkilder – bevægelse, kold finger, neglelak, lys udefra, tryk (ugeforsøg 3).",
-    "4. Klassedata og afvigelser – AI-afvigelsesmodel: middelværdi ± 2 standardafvigelser og z-værdier (ugeforsøg 5).",
+    "1. Mobil-PPG – delforsøg 1: puls og lys (DC, AC/DC) fra mobilkameraet sammenlignet med pulsoximeteret.",
+    "2. Måledagbog – delforsøg 2: 5 dage × 4 situationer + bevidste fejlmålinger. To AI-modeller markerer afvigelser.",
+    "3. Dagbog-resultater – gennemsnit pr. situation og AI-blindtest (sensitivitet/specificitet for model A og B).",
+    "4. Blå flaske – kemiforsøget: tid til farveløs ved 20, 30 og 40 °C.",
     "5. AI-test hudkræft – testskema til liveforsøget i biologi. Beregner sensitivitet, specificitet og træfsikkerhed.",
-    "6. BTB – kemiforsøget med CO₂ i udåndingsluft.",
+    "6. BTB – valgfrit kemiforsøg med CO₂ i udåndingsluft.",
     "7. Hb-bindingskurve – model af hæmoglobins iltbinding (Hill-ligningen) med Bohr-effekt. Prøv at ændre P50!",
     "8. Geografi-model – AI-parathedsmodellen (1–5 point pr. faktor) og landedata.",
     "",
     "Grafer til PowerPoint: Kopiér grafen (Ctrl+C) og indsæt i PowerPoint (Ctrl+V), eller højreklik på grafen i PowerPoint → Rediger data.",
-    "Fanen 'Klassedata og afvigelser' indeholder EKSEMPELDATA – slet dem og indsæt jeres egne.",
+    "Fanerne Mobil-PPG, Måledagbog og Blå flaske indeholder EKSEMPELDATA – overskriv dem med jeres egne.",
+    "Skjulte kolonner i Måledagbog (K–M, O–P) er hjælpeberegninger til model B – dem skal I ikke røre.",
 ]
 for i, t in enumerate(lines, start=3):
     ws.cell(row=i, column=1, value=t)
 ws["A3"].font = BOLD
 ws.column_dimensions["A"].width = 120
 
-# ============================================================================ HVILE
-ws = wb.create_sheet("Hvile")
-ws["A1"] = "Forsøg 1 – Hvile (sid stille 5 min, mål 3 gange med 30 s mellemrum)"
+# ============================================================================ MOBIL-PPG
+ws = wb.create_sheet("Mobil-PPG")
+ws["A1"] = "Delforsøg 1 – Pulsmåler med mobilkameraet (resultater fra ppg-analyse/index.html)"
 ws["A1"].font = TITLE
-header_row(ws, 3, ["Person", "Puls 1", "Puls 2", "Puls 3", "Gns. puls", "SpO₂ 1 (%)", "SpO₂ 2 (%)", "SpO₂ 3 (%)", "Gns. SpO₂ (%)"])
-for r in range(4, 8):
-    cell(ws, f"A{r}", f"Person {r - 3}", INPUT)
-    for col in "BCDFGH":
-        cell(ws, f"{col}{r}", None, INPUT)
-    cell(ws, f"E{r}", f'=IF(COUNT(B{r}:D{r})=0,"",AVERAGE(B{r}:D{r}))', CALC, fmt="0.0")
-    cell(ws, f"I{r}", f'=IF(COUNT(F{r}:H{r})=0,"",AVERAGE(F{r}:H{r}))', CALC, fmt="0.0")
-cell(ws, "A8", "Gruppens gns.", CALC, BOLD)
-cell(ws, "E8", '=IF(COUNT(E4:E7)=0,"",AVERAGE(E4:E7))', CALC, BOLD, "0.0")
-cell(ws, "I8", '=IF(COUNT(I4:I7)=0,"",AVERAGE(I4:I7))', CALC, BOLD, "0.0")
-widths(ws, {c: 13 for c in "ABCDEFGHI"})
-
-# ============================================================================ ARBEJDE OG RESTITUTION
-ws = wb.create_sheet("Arbejde og restitution")
-ws["A1"] = "Forsøg 2 – 3 min arbejde, derefter målinger mens I sidder stille"
-ws["A1"].font = TITLE
-ws["A2"] = "Hvile-rækken hentes automatisk fra fanen 'Hvile'. Grønt = pulsen er tilbage under hvilepuls + 10. (#I/T eller #N/A forsvinder, når I skriver tal ind.)"
+ws["A2"] = "EKSEMPELDATA i de gule felter – overskriv med jeres egne. Pulsoximeter-puls = gennemsnit af 3 aflæsninger under optagelsen."
 ws["A2"].font = NOTE
-cols = ["Tid", "Puls P1", "Puls P2", "Puls P3", "Puls P4", "Gns. puls", "SpO₂ P1", "SpO₂ P2", "SpO₂ P3", "SpO₂ P4", "Gns. SpO₂"]
-header_row(ws, 4, cols)
-times = ["hvile", "0 s", "30 s", "60 s", "90 s", "120 s", "180 s", "240 s", "300 s"]
-for i, t in enumerate(times):
-    r = 5 + i
-    cell(ws, f"A{r}", t, CALC if i == 0 else None, BOLD)
-    for j, col in enumerate("BCDE"):
-        if i == 0:
-            cell(ws, f"{col}{r}", f"=Hvile!E{4 + j}", CALC, fmt="0")
-        else:
-            cell(ws, f"{col}{r}", None, INPUT)
-    for j, col in enumerate("GHIJ"):
-        if i == 0:
-            cell(ws, f"{col}{r}", f"=Hvile!I{4 + j}", CALC, fmt="0")
-        else:
-            cell(ws, f"{col}{r}", None, INPUT)
-    cell(ws, f"F{r}", f'=IF(COUNT(B{r}:E{r})=0,NA(),AVERAGE(B{r}:E{r}))', CALC, BOLD, "0")
-    cell(ws, f"K{r}", f'=IF(COUNT(G{r}:J{r})=0,NA(),AVERAGE(G{r}:J{r}))', CALC, BOLD, "0.0")
-for col in "BCDE":
-    ws.conditional_formatting.add(
-        f"{col}6:{col}13",
-        FormulaRule(formula=[f'AND(ISNUMBER({col}6),ISNUMBER({col}$5),{col}6<={col}$5+10)'], fill=GOOD),
-    )
-cell(ws, "A15", "Restitutionstid (s)", INPUT, BOLD)
-for col in "BCDE":
-    cell(ws, f"{col}15", None, INPUT)
-ws["F15"] = "← skriv første tid, hvor feltet bliver grønt"
-ws["F15"].font = NOTE
-cell(ws, "A16", "Ændring i puls (%)", CALC, BOLD)
-cell(ws, "F16", '=IFERROR((F6-F5)/F5*100,"")', CALC, BOLD, "0")
-cell(ws, "A17", "Ændring SpO₂ (pp)", CALC, BOLD)
-cell(ws, "K17", '=IFERROR(K6-K5,"")', CALC, BOLD, "0.0")
-widths(ws, {c: 11 for c in "ABCDEFGHIJK"})
-ws.column_dimensions["A"].width = 20
-
-lc = LineChart()
-lc.title = "Puls efter arbejde"
-lc.y_axis.title = "slag/min"
-lc.x_axis.title = "tid"
-lc.height, lc.width = 8, 16
-lc.add_data(Reference(ws, min_col=2, max_col=6, min_row=4, max_row=13), titles_from_data=True)
-lc.set_categories(Reference(ws, min_col=1, min_row=5, max_row=13))
-ws.add_chart(lc, "M4")
-lc2 = LineChart()
-lc2.title = "Iltmætning SpO₂ efter arbejde"
-lc2.y_axis.title = "%"
-lc2.y_axis.scaling.min = 90
-lc2.y_axis.scaling.max = 100
-lc2.height, lc2.width = 8, 16
-lc2.add_data(Reference(ws, min_col=7, max_col=11, min_row=4, max_row=13), titles_from_data=True)
-lc2.set_categories(Reference(ws, min_col=1, min_row=5, max_row=13))
-ws.add_chart(lc2, "M21")
-
-# ============================================================================ FEJLKILDER
-ws = wb.create_sheet("Fejlkilder")
-ws["A1"] = "Forsøg 3 – Fejlkilder (én ændring ad gangen, samme person i hvile)"
-ws["A1"].font = TITLE
-header_row(ws, 3, ["Delforsøg", "Fremgangsmåde", "Puls", "SpO₂ (%)", "Tid til signal (s)", "Observation", "Fysisk forklaring"])
-rows = [
-    ("Normal (reference)", "Hånd i ro på bordet", "", "Referencemåling"),
-    ("a. Bevægelse", "Ryst hånden let", "", "Bevægelse ændrer lysvejen → falsk AC-signal"),
-    ("b. Kold finger", "1 min i koldt vand, tør", "", "Blodkar trækker sig sammen → svagt AC-signal"),
-    ("c. Neglelak", "Mørk neglelak, tør", "", "Lakken absorberer lyset"),
-    ("d. Lys udefra", "Lommelygte på klemmen", "", "Fremmed rødt/IR-lys forstyrrer sensoren"),
-    ("e. Tryk", "Pres fingeren mod bordet", "", "Mindre blodgennemstrømning → svagt signal"),
+header_row(ws, 4, ["Person / variant", "Puls mobil", "Puls oximeter", "Forskel", "Uregelm. slag",
+                   "DC rød", "DC grøn", "DC blå", "AC/DC rød (%)", "AC/DC grøn (%)", "AC/DC blå (%)", "Kvalitet", "Note"])
+ppg_rows = [
+    ("Person 1", 64, 63, 0, 238, 41, 5, 0.8, 2.1, 0.4, "god", ""),
+    ("Person 2", 73, 74, 1, 231, 37, 4, 0.7, 1.8, 0.3, "god", ""),
+    ("Person 3", 79, 78, 0, 244, 46, 6, 0.6, 2.4, 0.5, "god", ""),
+    ("Person 4", 68, 69, 0, 226, 35, 4, 0.9, 1.9, 0.4, "god", ""),
+    ("a. Tryk hårdt (P1)", 63, 64, 0, 247, 58, 8, 0.3, 0.6, 0.2, "usikker", "blodet presses ud → lille AC"),
+    ("b. Kold finger (P1)", 61, 62, 1, 236, 40, 5, 0.4, 0.9, 0.3, "god", "svagere signal"),
+    ("c. Bevægelse (P1)", 88, 64, 6, 229, 39, 5, 1.9, 3.6, 1.1, "usikker", "falske slag"),
+    ("d. Efter aktivitet (P1)", 112, 114, 0, 235, 40, 5, 0.9, 2.5, 0.4, "god", ""),
 ]
-for i, (a, b, _, f) in enumerate(rows):
-    r = 4 + i
-    cell(ws, f"A{r}", a, None, BOLD, align=WRAP)
-    cell(ws, f"B{r}", b, align=WRAP)
-    for col in "CDEF":
-        cell(ws, f"{col}{r}", None, INPUT, align=WRAP)
-    cell(ws, f"G{r}", f, align=WRAP)
-widths(ws, {"A": 20, "B": 26, "C": 9, "D": 10, "E": 14, "F": 34, "G": 44})
+for i, row in enumerate(ppg_rows):
+    r = 5 + i
+    name, pm, po, irr, dr, dg, db, ar, ag, ab, q, note = row
+    cell(ws, f"A{r}", name, None, BOLD, align=WRAP)
+    for col, v in zip("BCEFGHIJKLM", (pm, po, irr, dr, dg, db, ar, ag, ab, q, note)):
+        cell(ws, f"{col}{r}", v, INPUT, align=WRAP if col == "M" else None)
+    cell(ws, f"D{r}", f'=IF(OR(B{r}="",C{r}=""),"",B{r}-C{r})', CALC, BOLD)
+cell(ws, "A14", "Gns. personer 1–4", CALC, BOLD)
+for col in "BCFGHIJK":
+    cell(ws, f"{col}14", f'=IFERROR(AVERAGE({col}5:{col}8),"")', CALC, BOLD, "0.0")
+cell(ws, "A15", "Gns. afvigelse mobil vs. oximeter (slag/min)", CALC, BOLD, align=WRAP)
+cell(ws, "D15", '=IFERROR(SUMPRODUCT(ABS(B5:B8-C5:C8))/COUNT(B5:B8),"")', CALC, BOLD, "0.0")
+ws["A17"] = "Blåt lys absorberes næsten helt (lav DC), rødt slipper bedst igennem (høj DC). Pulsoximeteret bruger rødt + infrarødt."
+ws["A17"].font = NOTE
+widths(ws, {"A": 26, "B": 11, "C": 13, "D": 9, "E": 12, "F": 9, "G": 9, "H": 9, "I": 13, "J": 14, "K": 13, "L": 10, "M": 28})
+bc = BarChart()
+bc.title = "Hvor meget lys slipper gennem fingeren? (DC, gns.)"
+bc.y_axis.title = "lysstyrke (0–255)"
+bc.add_data(Reference(ws, min_col=6, max_col=8, min_row=14, max_row=14), from_rows=True, titles_from_data=False)
+bc.set_categories(Reference(ws, min_col=6, max_col=8, min_row=4, max_row=4))
+bc.legend = None
+bc.height, bc.width = 8, 14
+ws.add_chart(bc, "O4")
 
-# ============================================================================ KLASSEDATA OG AFVIGELSER
-ws = wb.create_sheet("Klassedata og afvigelser")
-ws["A1"] = "Forsøg 5 – AI-afvigelsesmodel: hvilke målinger er unormale?"
+# ============================================================================ MÅLEDAGBOG
+ws = wb.create_sheet("Måledagbog")
+ws["A1"] = "Delforsøg 2 – Måledagbog (5 dage × 4 situationer) med AI-blindtest"
 ws["A1"].font = TITLE
-ws["A2"] = "EKSEMPELDATA i de gule felter – slet og indsæt hele klassens hvilemålinger. Rækker 26–27 er bevidst 'afvigende' (neglelak / høj puls)."
+ws["A2"] = ("EKSEMPELDATA – overskriv. Kolonne G (facit) udfyldes af en ANDEN person: 'Ja' for de bevidste fejlmålinger. "
+            "Model A = hele gruppens normal. Model B = personens egen normal i samme situation (målingen selv tæller ikke med).")
 ws["A2"].font = NOTE
-header_row(ws, 4, ["Person/gruppe", "Hvilepuls", "SpO₂ (%)", "z (puls)", "z (SpO₂)", "Status"])
-example = [72, 65, 80, 77, 69, 84, 74, 70, 63, 79, 88, 71, 66, 75, 82, 68, 73, 78, 61, 76, 70]
-example_spo2 = [98, 99, 97, 98, 98, 97, 99, 98, 98, 97, 98, 99, 98, 97, 98, 98, 99, 97, 98, 98, 99]
-for i in range(45):
+ws["A2"].alignment = WRAP
+ws.merge_cells("A2:N2")
+ws.row_dimensions[2].height = 32
+cell(ws, "P1", "Grænse for |z|", None, BOLD)
+cell(ws, "Q1", 2, INPUT)
+cell(ws, "P2", "Mindste spredning puls", None, BOLD)
+cell(ws, "Q2", 4, INPUT)
+cell(ws, "P3", "Mindste spredning SpO₂", None, BOLD)
+cell(ws, "Q3", 1, INPUT)
+ws["R2"] = "(apparatets usikkerhed – undgår deling med 0)"
+ws["R2"].font = NOTE
+header_row(ws, 5, ["Person", "Dag", "Situation", "Puls", "SpO₂ (%)", "Note", "Fejlmåling? (facit)",
+                   "z puls (A)", "z SpO₂ (A)", "Model A", "n", "gns puls", "s puls", "z puls (B)",
+                   "gns SpO₂", "s SpO₂", "z SpO₂ (B)", "Model B"])
+SITS = ["Morgen – hvile", "Skole – siddende", "Efter aktivitet", "Aften – hvile"]
+dv_sit = DataValidation(type="list", formula1='"' + ",".join(SITS) + '"', allow_blank=True)
+dv_yn = DataValidation(type="list", formula1='"Ja,Nej"', allow_blank=True)
+ws.add_data_validation(dv_sit)
+ws.add_data_validation(dv_yn)
+
+import random as _random
+rnd = _random.Random(42)
+base = {"Person 1": ([58, 66, 118, 62], 98), "Person 2": ([68, 76, 136, 72], 97),
+        "Person 3": ([74, 82, 145, 78], 98), "Person 4": ([63, 70, 125, 66], 99)}
+faults = {("Person 1", 2, 1): ("neglelak", 0, -8), ("Person 1", 4, 3): ("bevægelse", 30, -1),
+          ("Person 2", 1, 0): ("kold finger", -2, -4), ("Person 2", 3, 1): ("lys udefra", 24, 0),
+          ("Person 3", 2, 3): ("neglelak", 2, -7), ("Person 3", 5, 0): ("bevægelse", 28, 0),
+          ("Person 4", 3, 1): ("kold finger", -3, -5), ("Person 4", 4, 0): ("lys udefra", 26, -1)}
+diary = []
+for day in range(1, 6):
+    for si, sit in enumerate(SITS):
+        for person, (pulses, sp) in base.items():
+            sd = 8 if si == 2 else 3
+            p = round(pulses[si] + rnd.gauss(0, sd))
+            o = min(100, max(95, round(sp + rnd.gauss(0, 0.55) - (0.4 if si == 2 else 0))))
+            diary.append((person, day, sit, p, o, "", "Nej"))
+            key = (person, day, si)
+            if key in faults:
+                kind, dp, do = faults[key]
+                fp = round(pulses[si] + dp + rnd.gauss(0, 2))
+                diary.append((person, day, sit, fp, min(100, sp + do), "", "Ja"))
+ROWS = 140
+LAST = 5 + ROWS
+rng = lambda c: f"${c}$6:${c}${LAST}"
+for i in range(ROWS):
+    r = 6 + i
+    vals = diary[i] if i < len(diary) else (None,) * 7
+    for col, v in zip("ABCDEFG", vals):
+        cell(ws, f"{col}{r}", v, INPUT)
+    dv_sit.add(f"C{r}")
+    dv_yn.add(f"G{r}")
+    empty = f'OR(D{r}="",E{r}="")'
+    cell(ws, f"H{r}", f'=IF({empty},"",(D{r}-AVERAGE({rng("D")}))/STDEV({rng("D")}))', CALC, fmt="0.0")
+    cell(ws, f"I{r}", f'=IF({empty},"",(E{r}-AVERAGE({rng("E")}))/MAX($Q$3,STDEV({rng("E")})))', CALC, fmt="0.0")
+    cell(ws, f"J{r}", f'=IF({empty},"",IF(OR(ABS(H{r})>$Q$1,ABS(I{r})>$Q$1),"AFVIGELSE","normal"))', CALC, BOLD)
+    cell(ws, f"K{r}", f'=IF({empty},"",COUNTIFS({rng("A")},A{r},{rng("C")},C{r}))', CALC)
+    mask = f'({rng("A")}=A{r})*({rng("C")}=C{r})'
+    cell(ws, f"L{r}", f'=IF(OR({empty},N(K{r})<3),"",(SUMIFS({rng("D")},{rng("A")},A{r},{rng("C")},C{r})-D{r})/(K{r}-1))', CALC, fmt="0.0")
+    cell(ws, f"M{r}", f'=IF(L{r}="","",SQRT(MAX(0,(SUMPRODUCT({mask}*({rng("D")}-L{r})^2)-(D{r}-L{r})^2)/(K{r}-2))))', CALC, fmt="0.0")
+    cell(ws, f"N{r}", f'=IF(L{r}="","",(D{r}-L{r})/MAX($Q$2,M{r}))', CALC, fmt="0.0")
+    cell(ws, f"O{r}", f'=IF(OR({empty},N(K{r})<3),"",(SUMIFS({rng("E")},{rng("A")},A{r},{rng("C")},C{r})-E{r})/(K{r}-1))', CALC, fmt="0.0")
+    cell(ws, f"P{r}", f'=IF(O{r}="","",SQRT(MAX(0,(SUMPRODUCT({mask}*({rng("E")}-O{r})^2)-(E{r}-O{r})^2)/(K{r}-2))))', CALC, fmt="0.0")
+    cell(ws, f"Q{r}", f'=IF(O{r}="","",(E{r}-O{r})/MAX($Q$3,P{r}))', CALC, fmt="0.0")
+    cell(ws, f"R{r}", f'=IF({empty},"",IF(L{r}="","for få data",IF(OR(ABS(N{r})>$Q$1,ABS(Q{r})>$Q$1),"AFVIGELSE","normal")))', CALC, BOLD)
+for col in "JR":
+    ws.conditional_formatting.add(f"{col}6:{col}{LAST}", CellIsRule(operator="equal", formula=['"AFVIGELSE"'], fill=BAD))
+    ws.conditional_formatting.add(f"{col}6:{col}{LAST}", CellIsRule(operator="equal", formula=['"normal"'], fill=GOOD))
+ws.conditional_formatting.add(f"G6:G{LAST}", CellIsRule(operator="equal", formula=['"Ja"'], fill=PatternFill("solid", fgColor="FFD64A")))
+for col in "KLMOP":
+    ws.column_dimensions[col].hidden = True
+widths(ws, {"A": 11, "B": 6, "C": 17, "D": 8, "E": 9, "F": 14, "G": 12, "H": 10, "I": 10, "J": 12,
+            "N": 10, "Q": 10, "R": 12})
+ws.freeze_panes = "A6"
+
+# ============================================================================ DAGBOG-RESULTATER
+ws = wb.create_sheet("Dagbog-resultater")
+ws["A1"] = "Resultater fra måledagbogen (beregnes automatisk – fejlmålinger er trukket fra gennemsnittene)"
+ws["A1"].font = TITLE
+D = "'Måledagbog'!"
+dr = lambda c: f"{D}${c}$6:${c}${LAST}"
+header_row(ws, 3, ["Situation", "Gns. puls", "Laveste puls", "Højeste puls", "Gns. SpO₂ (%)", "Laveste SpO₂", "Højeste SpO₂"])
+for i, sit in enumerate(SITS):
+    r = 4 + i
+    cell(ws, f"A{r}", sit, None, BOLD)
+    crit = f'{dr("C")},A{r},{dr("G")},"Nej"'
+    cell(ws, f"B{r}", f'=IFERROR(AVERAGEIFS({dr("D")},{crit}),"")', CALC, BOLD, "0")
+    cell(ws, f"C{r}", f'=IFERROR(_xlfn.MINIFS({dr("D")},{crit}),"")', CALC, None, "0")
+    cell(ws, f"D{r}", f'=IFERROR(_xlfn.MAXIFS({dr("D")},{crit}),"")', CALC, None, "0")
+    cell(ws, f"E{r}", f'=IFERROR(AVERAGEIFS({dr("E")},{crit}),"")', CALC, BOLD, "0.0")
+    cell(ws, f"F{r}", f'=IFERROR(_xlfn.MINIFS({dr("E")},{crit}),"")', CALC, None, "0")
+    cell(ws, f"G{r}", f'=IFERROR(_xlfn.MAXIFS({dr("E")},{crit}),"")', CALC, None, "0")
+
+header_row(ws, 10, ["AI-blindtest", "Model A (gruppe)", "Model B (personlig)", "Forklaring"])
+def cnt(model_col, facit, flag, extra=""):
+    return f'=COUNTIFS({dr("G")},"{facit}",{dr(model_col)},"{flag}"{extra})'
+rows = [
+    ("Fejlmålinger fundet (sand positiv)", cnt("J", "Ja", "AFVIGELSE"), cnt("R", "Ja", "AFVIGELSE"), "fejlmåling markeret som afvigelse"),
+    ("Fejlmålinger overset (falsk negativ)", cnt("J", "Ja", "normal"), cnt("R", "Ja", "normal"), "fejlmåling markeret som normal"),
+    ("Falske alarmer (falsk positiv)", cnt("J", "Nej", "AFVIGELSE"), cnt("R", "Nej", "AFVIGELSE"), "normal måling markeret som afvigelse"),
+    ("Korrekt normal (sand negativ)", cnt("J", "Nej", "normal"), cnt("R", "Nej", "normal"), ""),
+    ("Sensitivitet", "=IFERROR(B11/(B11+B12),\"\")", "=IFERROR(C11/(C11+C12),\"\")", "andel af fejlmålinger fundet"),
+    ("Specificitet", "=IFERROR(B14/(B14+B13),\"\")", "=IFERROR(C14/(C14+C13),\"\")", "andel af normale målinger, der ikke gav alarm"),
+    ("Falske alarmer 'Efter aktivitet'", cnt("J", "Nej", "AFVIGELSE", f',{dr("C")},"Efter aktivitet"'),
+     cnt("R", "Nej", "AFVIGELSE", f',{dr("C")},"Efter aktivitet"'), "høj puls efter løb er normal – men ligner en afvigelse"),
+]
+for i, (n, fa, fb, d) in enumerate(rows):
+    r = 11 + i
+    fmt = "0%" if n in ("Sensitivitet", "Specificitet") else "0"
+    cell(ws, f"A{r}", n, None, BOLD, align=WRAP)
+    cell(ws, f"B{r}", fa, CALC, BOLD, fmt)
+    cell(ws, f"C{r}", fb, CALC, BOLD, fmt)
+    ws[f"D{r}"] = d
+    ws[f"D{r}"].font = NOTE
+widths(ws, {"A": 34, "B": 17, "C": 19, "D": 14, "E": 14, "F": 13, "G": 13})
+ch = BarChart()
+ch.title = "Gennemsnitlig puls pr. situation"
+ch.y_axis.title = "slag/min"
+ch.add_data(Reference(ws, min_col=2, min_row=3, max_row=7), titles_from_data=True)
+ch.set_categories(Reference(ws, min_col=1, min_row=4, max_row=7))
+ch.legend = None
+ch.height, ch.width = 7.5, 14
+ws.add_chart(ch, "I3")
+ch2 = BarChart()
+ch2.title = "Gennemsnitlig SpO₂ pr. situation"
+ch2.y_axis.title = "%"
+ch2.y_axis.scaling.min, ch2.y_axis.scaling.max = 90, 100
+ch2.add_data(Reference(ws, min_col=5, min_row=3, max_row=7), titles_from_data=True)
+ch2.set_categories(Reference(ws, min_col=1, min_row=4, max_row=7))
+ch2.legend = None
+ch2.height, ch2.width = 7.5, 14
+ws.add_chart(ch2, "I19")
+ch3 = BarChart()
+ch3.title = "AI-blindtest: model A vs. model B"
+ch3.add_data(Reference(ws, min_col=2, max_col=3, min_row=10, max_row=10), titles_from_data=True)
+ch3.series = []
+from openpyxl.chart import Series as _S
+for col in (2, 3):
+    s = _S(Reference(ws, min_col=col, min_row=15, max_row=16), title_from_data=False,
+           title=ws.cell(row=10, column=col).value)
+    ch3.series.append(s)
+ch3.set_categories(Reference(ws, min_col=1, min_row=15, max_row=16))
+ch3.y_axis.scaling.min, ch3.y_axis.scaling.max = 0, 1
+ch3.y_axis.number_format = "0%"
+ch3.height, ch3.width = 7.5, 14
+ws.add_chart(ch3, "A20")
+
+# ============================================================================ BLÅ FLASKE
+ws = wb.create_sheet("Blå flaske")
+ws["A1"] = "Kemi – Den blå flaske: tid fra rystning (10 gange) til væsken er farveløs"
+ws["A1"].font = TITLE
+ws["A2"] = "EKSEMPELDATA – overskriv med jeres egne målinger."
+ws["A2"].font = NOTE
+header_row(ws, 4, ["Temperatur (°C)", "Forsøg 1 (s)", "Forsøg 2 (s)", "Forsøg 3 (s)", "Gennemsnit (s)"])
+for i, (t, a, b, c) in enumerate(((20, 62, 58, 65), (30, 33, 30, 35), (40, 17, 15, 18))):
     r = 5 + i
-    cell(ws, f"A{r}", f"Elev {i + 1}" if i < 23 else None, INPUT)
-    if i < len(example):
-        p, o = example[i], example_spo2[i]
-    elif i == 21:
-        p, o = 106, 98
-    elif i == 22:
-        p, o = 74, 89
-    else:
-        p, o = None, None
-    cell(ws, f"B{r}", p, INPUT)
-    cell(ws, f"C{r}", o, INPUT)
-    cell(ws, f"D{r}", f'=IF(B{r}="","",(B{r}-$I$5)/$I$6)', CALC, fmt="0.00")
-    cell(ws, f"E{r}", f'=IF(C{r}="","",(C{r}-$J$5)/$J$6)', CALC, fmt="0.00")
-    cell(ws, f"F{r}", f'=IF(AND(B{r}="",C{r}=""),"",IF(OR(ABS(N(D{r}))>2,ABS(N(E{r}))>2),"AFVIGELSE","normal"))', CALC, BOLD)
-ws.conditional_formatting.add("F5:F49", CellIsRule(operator="equal", formula=['"AFVIGELSE"'], fill=BAD))
-ws.conditional_formatting.add("F5:F49", CellIsRule(operator="equal", formula=['"normal"'], fill=GOOD))
-header_row(ws, 4, ["Statistik", "Puls", "SpO₂"], col=8)
-stats = [("Middelværdi x̄", "AVERAGE"), ("Standardafvigelse s", "STDEV"), ("Nedre grænse x̄ − 2s", None),
-         ("Øvre grænse x̄ + 2s", None), ("Antal målinger", "COUNT")]
-for i, (name, fn) in enumerate(stats):
-    r = 5 + i
-    cell(ws, f"H{r}", name, None, BOLD)
-    for col, src in (("I", "B"), ("J", "C")):
-        if fn:
-            f = f"={fn}({src}5:{src}49)"
-        elif "Nedre" in name:
-            f = f"={col}5-2*{col}6"
-        else:
-            f = f"={col}5+2*{col}6"
-        cell(ws, f"{col}{r}", f, CALC, fmt="0" if fn == "COUNT" else "0.0")
-ws["H11"] = "Regel: en måling er en AFVIGELSE, hvis |z| > 2, dvs. den ligger uden for x̄ ± 2s."
-ws["H12"] = "Diskutér: Ville en høj puls lige efter løb også blive markeret? Hvad mangler modellen?"
-ws["H11"].font = NOTE
-ws["H12"].font = NOTE
-widths(ws, {"A": 15, "B": 11, "C": 11, "D": 10, "E": 10, "F": 13, "G": 3, "H": 24, "I": 11, "J": 11})
+    cell(ws, f"A{r}", t, INPUT, BOLD)
+    for col, v in zip("BCD", (a, b, c)):
+        cell(ws, f"{col}{r}", v, INPUT)
+    cell(ws, f"E{r}", f'=IFERROR(AVERAGE(B{r}:D{r}),"")', CALC, BOLD, "0.0")
+header_row(ws, 10, ["'Hold den blå' i 1 min", "Antal rystninger"])
+cell(ws, "A11", "ca. 20 °C", None, BOLD)
+cell(ws, "B11", 2, INPUT)
+cell(ws, "A12", "ca. 40 °C", None, BOLD)
+cell(ws, "B12", 5, INPUT)
+ws["A14"] = "Varmere → ilten bruges hurtigere → man skal 'trække vejret' (ryste) oftere for at holde væsken blå (iltet)."
+ws["A14"].font = NOTE
+widths(ws, {"A": 22, "B": 16, "C": 13, "D": 13, "E": 15})
 sc = ScatterChart()
-sc.title = "Hvilepuls – hver prik er én person"
+sc.title = "Tid til farveløs vs. temperatur"
 sc.style = 13
-sc.x_axis.title = "person nr."
-sc.y_axis.title = "slag/min"
-sc.height, sc.width = 9, 16
-ws["L4"] = "Nr."
-for i in range(45):
-    ws[f"L{5 + i}"] = i + 1
-ser = Series(Reference(ws, min_col=2, min_row=5, max_row=49), Reference(ws, min_col=12, min_row=5, max_row=49),
-             title="Hvilepuls")
-ser.marker.symbol = "circle"
-ser.marker.size = 7
-ser.graphicalProperties.line.noFill = True
-sc.series.append(ser)
-ws.column_dimensions["L"].hidden = True
-ws.add_chart(sc, "H15")
+sc.x_axis.title = "temperatur (°C)"
+sc.y_axis.title = "tid (s)"
+sc.height, sc.width = 8, 14
+s = Series(Reference(ws, min_col=5, min_row=5, max_row=7), Reference(ws, min_col=1, min_row=5, max_row=7), title="Gennemsnit")
+s.marker.symbol = "circle"
+s.marker.size = 8
+sc.series.append(s)
+sc.legend = None
+ws.add_chart(sc, "G4")
 
 # ============================================================================ AI-TEST HUDKRÆFT
 ws = wb.create_sheet("AI-test hudkræft")
@@ -289,7 +358,7 @@ widths(ws, {"A": 11, "B": 13, "C": 13, "D": 15, "E": 30, "F": 16, "G": 3, "H": 2
 
 # ============================================================================ BTB
 ws = wb.create_sheet("BTB")
-ws["A1"] = "Kemi – CO₂ i udåndingsluft (BTB): tid til farveskift til gul"
+ws["A1"] = "Kemi (valgfrit) – CO₂ i udåndingsluft (BTB): tid til farveskift til gul"
 ws["A1"].font = TITLE
 header_row(ws, 3, ["Person", "Hvile (s)", "Efter arbejde (s)", "Forskel (s)"])
 for i in range(3):

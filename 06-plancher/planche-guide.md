@@ -6,8 +6,8 @@ Filen **`FFFO-plancher.pptx`** indeholder **5 plancher i A3 stående format**. D
 |---|---|---|
 | 0. **Overblik** | Problemformulering, 4 underspørgsmål og den røde tråd | Alle |
 | 1. **Biologi** | Rask celle vs. kræftcelle (tegning), bilmodellen, ABCDE, liveforsøg og resultater | P1 |
-| 2. **Fysik** | Pulsoximeter-skitse, PPG-signal, formler, grafer fra ugeforsøget, AI og afvigelser, fejlkilder | P2 |
-| 3. **Kemi** | Hæmoglobinmodel, ligevægt, bindingskurve med Bohr-effekt, reaktionsligninger | P3 |
+| 2. **Fysik** | Pulsoximeter-skitse, PPG-signal, formler, mobil-PPG og måledagbog, AI-blindtest, fejlkilder | P2 |
+| 3. **Kemi** | Hæmoglobinmodel, ligevægt, bindingskurve med Bohr-effekt, den blå flaske | P3 |
 | 4. **Geografi** | Verdenskort, AI-parathedsmodel (tabel + søjlediagram), AI-paradokset, kræftdiagnose | P4 |
 
 ## Sådan færdiggør I plancherne
@@ -32,8 +32,8 @@ Filen **`FFFO-plancher.pptx`** indeholder **5 plancher i A3 stående format**. D
 | Fag | Idé |
 |---|---|
 | Biologi | Tegn eller klip rask og syg celle i karton. Lav et lille "ABCDE"-kort med fotos af godartet og ondartet modermærke (fra ISIC). |
-| Fysik | Lim et billede af jeres pulsoximeter på. Tegn lysets vej gennem fingeren med rød og mørkerød tusch. |
-| Kemi | Sæt jeres **LEGO-/molekylemodel af hæmoglobin** foran planchen. Lim BTB-farveskalaen på (blå → grøn → gul). |
+| Fysik | Lim et billede af jeres pulsoximeter og et skærmbillede fra PPG-værktøjet på. Tegn lysets vej gennem fingeren med rød og mørkerød tusch. |
+| Kemi | Sæt jeres **LEGO-/molekylemodel af hæmoglobin** foran planchen. Stil den blå flaske ved siden af (hvis læreren tillader det), eller lim fotos af den blå og den farveløse flaske på. |
 | Geografi | Et verdenskort, hvor landene er farvet efter AI-parathed, med pile til faktaboksene. |
 
 ## Placering til prøven

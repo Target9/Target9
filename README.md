@@ -10,8 +10,8 @@ Alt er skrevet, så I kan følge det trin for trin: teori, forsøg, modeller, Po
 | Fag | Underspørgsmål | Forsøg / model |
 |---|---|---|
 | Biologi | Hvordan adskiller kræftceller i huden sig fra raske celler, og i hvor høj grad kan AI genkende hudkræft ud fra billeder? | **Liveforsøg:** AI analyserer hudbilleder |
-| Fysik | Hvordan måler en pulsoximeter puls og iltmætning ved hjælp af lys, og hvordan kan AI bruge den slags data til at opdage afvigelser? | **Ugeforsøg:** Puls og iltmætning |
-| Kemi | Hvordan binder hæmoglobin ilt i blodet, og hvorfor ændrer iltmætningen sig ved fysisk aktivitet? | **Ugeforsøg:** Forklarer jeres resultater |
+| Fysik | Hvordan måler en pulsoximeter puls og iltmætning ved hjælp af lys, og hvordan kan AI bruge den slags data til at opdage afvigelser? | **Ugeforsøg "Find din egen normal":** pulsmåler med mobilkameraet + 5-dages måledagbog med AI-blindtest |
+| Kemi | Hvordan binder hæmoglobin ilt i blodet, og hvorfor ændrer iltmætningen sig ved fysisk aktivitet? | **Ugeforsøg:** Forklarer resultaterne + kemiforsøget "den blå flaske" |
 | Geografi | Hvilke faktorer afgør, om et lands befolkning får gavn af AI i sundhedsvæsenet, og hvad betyder det for kræftdiagnosticering? | **Model + perspektivering** |
 
 ## Mappeoversigt – læs i denne rækkefølge
@@ -20,19 +20,20 @@ Alt er skrevet, så I kan følge det trin for trin: teori, forsøg, modeller, Po
 |---|---|---|
 | 0 | [`00-plan-og-roller.md`](00-plan-og-roller.md) | Arbejdsplan, rollefordeling, materialeliste, tjekliste |
 | 1 | [`01-biologi/biologi-guide.md`](01-biologi/biologi-guide.md) | Teori om hudceller og kræftceller + **liveforsøg med AI (Teachable Machine)** + modeller |
-| 2 | [`02-fysik/fysik-guide.md`](02-fysik/fysik-guide.md) | Teori om lys og pulsoximeter + **ugeforsøg: puls og iltmætning** + AI-afvigelsesmodel |
-| 3 | [`03-kemi/kemi-guide.md`](03-kemi/kemi-guide.md) | Teori om hæmoglobin + forklaring af jeres resultater + ekstra kemiforsøg (BTB og CO₂) |
+| 2 | [`02-fysik/fysik-guide.md`](02-fysik/fysik-guide.md) | Teori om lys og pulsoximeter + **ugeforsøg: pulsmåler med mobilen + måledagbog med AI-blindtest** |
+| 3 | [`03-kemi/kemi-guide.md`](03-kemi/kemi-guide.md) | Teori om hæmoglobin + forklaring af jeres resultater + **kemiforsøg: den blå flaske** (+ valgfrit BTB) |
 | 4 | [`04-geografi/geografi-guide.md`](04-geografi/geografi-guide.md) | Faktorer, landesammenligning, **AI-parathedsmodel** og perspektivering |
 | 5 | [`05-powerpoint/powerpoint-guide.md`](05-powerpoint/powerpoint-guide.md) | Slide-for-slide guide + færdig fil `FFFO-praesentation.pptx` (med talenoter) |
 | 6 | [`06-plancher/planche-guide.md`](06-plancher/planche-guide.md) | Layout og indhold til 4 plancher + færdig fil `FFFO-plancher.pptx` |
 | 7 | [`07-manuskript/manuskript.md`](07-manuskript/manuskript.md) | Manuskript/guideline til fremlæggelsen med tider og overgange |
 | 8 | [`08-eksamen/eksamensforberedelse.md`](08-eksamen/eksamensforberedelse.md) | Mulige spørgsmål fra lærer/censor med svar, øveplan, fejlkilder |
-| 9 | [`skabeloner/maaleskema.xlsx`](skabeloner/maaleskema.xlsx) | Regneark: måleskemaer, grafer, afvigelsesmodel, AI-test (sensitivitet/specificitet), hæmoglobin-bindingskurve |
+| 9 | [`skabeloner/maaleskema.xlsx`](skabeloner/maaleskema.xlsx) | Regneark: Mobil-PPG, måledagbog med to AI-modeller, blå flaske, AI-test (sensitivitet/specificitet), hæmoglobin-bindingskurve, geografimodel |
+| 10 | [`02-fysik/ppg-analyse/index.html`](02-fysik/ppg-analyse/index.html) | Analyseværktøj: find pulsen i en mobilvideo af fingerspidsen (åbn i Chrome/Edge, virker uden internet) |
 
 ## Den røde tråd (det, censor skal kunne se)
 
 1. **Biologi:** Hvad er sygdommen? Kræftceller har ødelagte kontrolmekanismer. Det kan ses på cellerne og på huden.
-2. **Fysik:** Hvordan måler vi kroppen med lys? Pulsoximeteret laver data om til tal.
+2. **Fysik:** Hvordan måler vi kroppen med lys? Pulsoximeteret (og vores mobil-pulsmåler) laver lys om til data, og AI finder afvigelser i dem.
 3. **Kemi:** Hvorfor ser tallene ud, som de gør? Hæmoglobin binder ilt kemisk.
 4. **Geografi:** Hvem får gavn af teknologien? AI virker ikke lige godt for alle lande eller alle hudtyper.
 5. **Fælles konklusion:** AI er et stærkt *hjælpeværktøj*, ikke en læge. Det virker kun så godt som de data, det er trænet på, og som det sundhedssystem, det bruges i.

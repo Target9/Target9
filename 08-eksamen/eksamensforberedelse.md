@@ -67,13 +67,28 @@ Neglelakken absorberer lyset, så der kommer for lidt lys til sensoren. Ved kold
 Fingerclipsen måler det lys, der går igennem fingeren (transmission). Et smartwatch måler det lys, der kastes tilbage fra huden (refleksion), fordi LED og sensor sidder på samme side.
 
 **7. Hvordan virker jeres afvigelsesmodel?**
-Middelværdi og standardafvigelse af normale målinger. Alt uden for middel ± 2s (|z| > 2) markeres. Ca. 95 % af normale målinger ligger indenfor.
+Vi beregner middelværdi og standardafvigelse og markerer en måling, hvis |z| > 2, altså hvis den ligger mere end 2 standardafvigelser fra middel (ca. 95 % af normale målinger ligger indenfor). Model A sammenligner med hele gruppens målinger. Model B sammenligner kun med personens egne målinger i samme situation, men uden selve målingen.
 
 **8. Hvorfor er det svært for en AI at vide, om en høj puls er farlig?**
 Den mangler kontekst. Høj puls er normal ved løb, men unormal i søvn. Derfor kombinerer smartwatches pulsen med bevægelsessensoren og lærer personens egen normal.
 
 **9. Hvorfor kan pulsoximetre være upræcise på mørk hud?**
 Melanin absorberer også lys, og apparaterne er især kalibreret på personer med lys hud. Studier viser, at skjult iltmangel overses oftere.
+
+**10. Hvordan kunne mobilkameraet måle pulsen?**
+Lommelygten sender lys ind i fingeren, og kameraet måler, hvor meget der slipper igennem. Ved hvert hjerteslag kommer der mere blod i fingeren, som absorberer mere lys, så billedet bliver en anelse mørkere. Tiden mellem de mørke "dyk" giver pulsen (puls = 60/T).
+
+**11. Hvorfor var blåt lys næsten 0, mens rødt var højt?**
+Blod og væv absorberer blåt og grønt lys meget kraftigt, mens rødt lys trænger bedre igennem. Absorptionen afhænger af bølgelængden, og det er derfor, pulsoximeteret bruger to bestemte bølgelængder.
+
+**12. Hvorfor kan mobilen ikke måle iltmætning?**
+Den har ikke infrarødt lys, og den er ikke kalibreret. Iltmætning kræver, at man sammenligner absorptionen ved to bølgelængder, hvor Hb og HbO₂ opfører sig forskelligt.
+
+**13. Hvorfor fandt den personlige model flere fejlmålinger end gruppemodellen?**
+Gruppemodellen sammenligner med alles gennemsnit, så en høj puls efter aktivitet ligner en afvigelse (falsk alarm), mens en fejlmåling hos en person med lav puls kan gemme sig. Den personlige model sammenligner med personens egne målinger i samme situation, altså med kontekst, ligesom et smartwatch.
+
+**14. Hvorfor lavede I en blindtest?**
+Så modellen (og vi) ikke kendte svaret på forhånd. Det svarer til testbillederne i biologi: Man kan kun måle, hvor god en model er, på data, den ikke har "set" facit for.
 
 ## Kemi
 
@@ -89,16 +104,19 @@ Kooperativ binding: Når én O₂ binder, ændrer molekylet form, så de næste 
 **4. Hvad er Bohr-effekten?**
 Mere CO₂, flere H⁺ (lavere pH) og højere temperatur får hæmoglobin til at afgive ilt lettere. Kurven forskydes mod højre. Det sker i arbejdende muskler.
 
-**5. Hvorfor faldt jeres iltmætning ikke, da I løb?**
+**5. Hvorfor var jeres iltmætning stabil i alle situationer i måledagbogen?**
 Pulsoximeteret måler arterieblodet, der lige er blevet iltet i lungerne. Hurtigere vejrtrækning og den flade top af bindingskurven sikrer næsten fuld mætning. Iltforbruget ses i veneblodet.
 
-**6. Hvad viste BTB-forsøget?**
-Udåndingsluften efter arbejde gjorde BTB gul hurtigere, fordi der blev udåndet mere CO₂. CO₂ + H₂O ⇌ H₂CO₃ ⇌ H⁺ + HCO₃⁻ giver H⁺, som gør opløsningen sur.
+**6. Hvad viste den blå flaske, og hvorfor er den en model?**
+Glukose gør methylenblåt farveløst, og ilt fra luften (rystning) gør det blåt igen. Rystning svarer til lungerne, og glukosens iltforbrug svarer til respirationen. Ved højere temperatur blev ilten brugt hurtigere, og vi skulle ryste oftere for at holde den blå, ligesom man trækker vejret hurtigere under arbejde. Begrænsning: Methylenblåt reagerer kemisk med ilten (oxideres), mens hæmoglobin binder den løst og har en S-formet kurve.
 
-**7. Hvorfor er kulilte farligt, og hvorfor opdager pulsoximeteret det ikke?**
+**7. Hvorfor går reaktionen i den blå flaske hurtigere, når det er varmt?**
+Molekylerne bevæger sig hurtigere og støder oftere og hårdere sammen, så flere stød fører til reaktion.
+
+**8. Hvorfor er kulilte farligt, og hvorfor opdager pulsoximeteret det ikke?**
 CO binder ca. 200–250 gange stærkere til jernet end O₂ og blokerer pladserne. HbCO er lyserødt ligesom HbO₂, så apparatet viser en falsk høj iltmætning.
 
-**8. Skriv respirationsligningen.**
+**9. Skriv respirationsligningen.**
 C₆H₁₂O₆ + 6 O₂ → 6 CO₂ + 6 H₂O + energi
 
 ## Geografi
@@ -139,4 +157,4 @@ Det er et etisk dilemma. I dag har lægen ansvaret, og AI er et hjælpemiddel. E
 En model er en forenklet gengivelse af virkeligheden, der hjælper med at forklare eller forudsige. Alle vores modeller forenkler: bilmodellen (kun én speeder/bremse), Hill-kurven (gennemsnitsværdier), afvigelsesmodellen (ingen kontekst) og AI-parathedsmodellen (subjektive point).
 
 **Hvad ville I undersøge, hvis I havde mere tid?**
-Teste AI'en på flere hudtyper, måle med et medicinsk pulsoximeter, sammenligne med et smartwatch, og indsamle data fra flere klasser.
+Teste AI'en på flere hudtyper, måle med et medicinsk pulsoximeter, sammenligne mobil-pulsmåleren med et smartwatch, føre måledagbog i længere tid og med flere personer, og måle den blå flaskes farve med en lysmåler i stedet for med øjet.
