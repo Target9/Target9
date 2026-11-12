@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PPG-analyse · Mål pulsen med lys</title>
+<style>
+  :root { --navy:#1b2a41; --ink:#222b38; --grey:#6b7585; --light:#f3f5f9; --line:#d5dbe5;
+          --red:#d64545; --green:#2e9e6a; --blue:#2f6fde; --orange:#e88a1a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:#fff; }
+  header { background:var(--navy); color:#fff; padding:28px 24px 22px; }
+  header h1 { margin:0 0 6px; font-size:28px; }
+  header p { margin:0; opacity:.8; max-width:820px; line-height:1.45; }
+  main { max-width:1100px; margin:0 auto; padding:24px; }
+  .steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-bottom:22px; }
+  .step { background:var(--light); border-radius:12px; padding:14px 16px; line-height:1.4; font-size:15px; }
+  .step b { display:block; color:var(--blue); margin-bottom:4px; }
+  .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:8px 0 18px; }
+  button, label.btn { font:inherit; font-weight:600; border:0; border-radius:10px; padding:11px 16px; cursor:pointer;
+                      background:var(--blue); color:#fff; display:inline-flex; align-items:center; gap:8px; }
+  button.secondary, label.secondary { background:#e8eef8; color:var(--navy); }
+  button:disabled { opacity:.5; cursor:default; }
+  input[type=file] { display:none; }
+  select { font:inherit; padding:9px 10px; border-radius:8px; border:1px solid var(--line); }
+  #status { color:var(--grey); min-height:22px; margin-bottom:10px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:16px; }
+  .card { border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .card .v { font-size:34px; font-weight:800; color:var(--navy); }
+  .card .l { color:var(--grey); font-size:14px; }
+  .card.warn .v { color:var(--orange); }
+  .card.bad .v { color:var(--red); }
+  canvas.plot { width:100%; height:220px; border:1px solid var(--line); border-radius:12px; background:#fff; display:block; margin-bottom:6px; }
+  .cap { color:var(--grey); font-size:13px; margin:0 0 18px; }
+  table { border-collapse:collapse; width:100%; margin:6px 0 18px; font-size:15px; }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:center; }
+  th { background:var(--navy); color:#fff; }
+  .note { background:#fff6db; border-radius:10px; padding:12px 14px; line-height:1.45; font-size:14px; }
+  video { width:160px; border-radius:10px; background:#000; }
+  .hidden { display:none !important; }
+  .row { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mål pulsen med lys – PPG-analyse</h1>
+  <p>Værktøjet måler, hvor meget lys der slipper gennem fingerspidsen i hvert billede af en mobilvideo.
+     Hver gang hjertet slår, kommer der lidt mere blod i fingeren, og det absorberer lidt mere lys.
+     Det er præcis det samme princip som i et pulsoximeter.</p>
+</header>
+<main>
+  <div class="steps">
+    <div class="step"><b>1. Optag</b>Tænd mobilens lommelygte, og læg pegefingeren <i>let</i> over både kamera og lys på bagsiden. Optag en video på 20–30 sekunder, og hold helt stille.</div>
+    <div class="step"><b>2. Mål samtidig</b>Sæt pulsoximeteret på den anden hånd, og skriv pulsen ned undervejs, så I kan sammenligne.</div>
+    <div class="step"><b>3. Analysér</b>Overfør videoen til computeren, og vælg den herunder. Analysen tager lige så lang tid som videoen.</div>
+    <div class="step"><b>4. Notér</b>Skriv puls, antal uregelmæssige slag og AC/DC for rød, grøn og blå ind i regnearket (fanen <i>Mobil-PPG</i>).</div>
+  </div>
+
+  <div class="controls">
+    <label class="btn">Vælg video …<input id="file" type="file" accept="video/*"></label>
+    <button id="live" class="secondary">Brug kamera live (20 s)</button>
+    <button id="demo" class="secondary">Prøv med eksempelsignal</button>
+    <label>Farvekanal:
+      <select id="channel">
+        <option value="auto">automatisk</option>
+        <option value="r">rød</option>
+        <option value="g">grøn</option>
+        <option value="b">blå</option>
+      </select>
+    </label>
+    <button id="csv" class="secondary" disabled>Download data (CSV)</button>
+  </div>
+  <div class="row">
+    <video id="video" class="hidden" muted playsinline></video>
+    <div id="status">Vælg en video, eller prøv eksempelsignalet.</div>
+  </div>
+
+  <section id="results" class="hidden">
+    <div class="cards">
+      <div class="card" id="c-bpm"><div class="v" id="bpm">–</div><div class="l">puls (slag/min)</div></div>
+      <div class="card"><div class="v" id="nbeats">–</div><div class="l">fundne hjerteslag</div></div>
+      <div class="card" id="c-irr"><div class="v" id="irr">–</div><div class="l">uregelmæssige slag (afviger &gt; 25 %)</div></div>
+      <div class="card" id="c-q"><div class="v" id="quality">–</div><div class="l">signalkvalitet</div></div>
+    </div>
+
+    <canvas class="plot" id="plotRaw"></canvas>
+    <p class="cap">Lysstyrke i rød, grøn og blå kanal (hver kanal er skaleret for sig). Blåt og grønt lys absorberes kraftigt af blodet, mens rødt lys slipper bedst igennem.</p>
+
+    <canvas class="plot" id="plotFilt"></canvas>
+    <p class="cap">Det pulserende signal (AC) i den valgte kanal, hvor det langsomme niveau (DC) er trukket fra. Prikkerne er fundne hjerteslag, og <b style="color:#d64545">røde prikker</b> er slag med en unormal afstand til det forrige.</p>
+
+    <table>
+      <thead><tr><th>Kanal</th><th>DC (gns. lysstyrke 0–255)</th><th>AC (udsving)</th><th>AC/DC (%)</th><th>Bemærkning</th></tr></thead>
+      <tbody id="chTable"></tbody>
+    </table>
+
+    <div class="note"><b>Sådan læser I resultatet:</b> DC er det konstante lys, der slipper igennem hud, knogle og veneblod. AC er det lille udsving, der skyldes arterieblodet ved hvert hjerteslag. Et rigtigt pulsoximeter sammenligner AC/DC for rødt og infrarødt lys for at finde iltmætningen. Mobilen har ikke infrarødt lys, så den kan kun måle pulsen pålideligt.
+      <br><b>"Uregelmæssige slag"</b> er en simpel afvigelsesmodel: Et slag markeres, hvis tiden siden forrige slag afviger mere end 25 % fra medianen. Det er samme idé, som smartwatches bruger til at opdage hjerterytmeforstyrrelser. Bevægelse giver også "afvigelser", så det er IKKE en diagnose.</div>
+  </section>
+</main>
+
+<script src="analyse.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const video = $("video");
+  const grab = document.createElement("canvas");
+  grab.width = grab.height = 48;
+  const gctx = grab.getContext("2d", { willReadFrequently: true });
+  let samples = [];
+  let result = null;
+
+  function status(t) { $("status").textContent = t; }
+
+  function sampleFrame(t) {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh) return;
+    const s = Math.min(vw, vh) * 0.5;
+    gctx.drawImage(video, (vw - s) / 2, (vh - s) / 2, s, s, 0, 0, 48, 48);
+    const d = gctx.getImageData(0, 0, 48, 48).data;
+    let r = 0, g = 0, b = 0;
+    const n = d.length / 4;
+    for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+    samples.push({ t, r: r / n, g: g / n, b: b / n });
+  }
+
+  function collect(onDone, maxSeconds) {
+    samples = [];
+    const useRVFC = "requestVideoFrameCallback" in HTMLVideoElement.prototype;
+    let start = null;
+    const step = (now, meta) => {
+      const t = meta && meta.mediaTime !== undefined && video.duration !== Infinity && !video.srcObject
+        ? meta.mediaTime : (start === null ? (start = performance.now(), 0) : (performance.now() - start) / 1000);
+      sampleFrame(t);
+      const elapsed = samples.length ? samples[samples.length - 1].t - samples[0].t : 0;
+      status(`Måler lys … ${elapsed.toFixed(1)} s (${samples.length} billeder)`);
+      if (maxSeconds && elapsed >= maxSeconds) { onDone(); return; }
+      if (video.ended) return;
+      useRVFC ? video.requestVideoFrameCallback(step) : requestAnimationFrame(() => step(performance.now()));
+    };
+    useRVFC ? video.requestVideoFrameCallback(step) : requestAnimationFrame(() => step(performance.now()));
+  }
+
+  $("file").addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    stopLive();
+    video.srcObject = null;
+    video.src = URL.createObjectURL(f);
+    video.classList.remove("hidden");
+    video.onended = () => run();
+    video.onloadedmetadata = () => {
+      status("Afspiller video og måler lys …");
+      collect(() => {}, 0);
+      video.play().catch(() => status("Kunne ikke afspille videoen. Prøv en anden fil (mp4 virker bedst)."));
+    };
+  });
+
+  let stream = null;
+  function stopLive() { if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; } }
+  $("live").addEventListener("click", async () => {
+    try {
+      stopLive();
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: 320, height: 240 } });
+      const track = stream.getVideoTracks()[0];
+      try { await track.applyConstraints({ advanced: [{ torch: true }] }); } catch (_) { /* ikke alle kameraer har lys */ }
+      video.removeAttribute("src");
+      video.srcObject = stream;
+      video.classList.remove("hidden");
+      await video.play();
+      status("Læg fingeren over kameraet … måling starter om 3 sekunder");
+      setTimeout(() => collect(() => { stopLive(); run(); }, 20), 3000);
+    } catch (err) {
+      status("Kameraet kunne ikke startes (" + err.name + "). Optag i stedet en video, og vælg filen.");
+    }
+  });
+
+  $("demo").addEventListener("click", () => {
+    samples = PPG.demoSamples(72, 20, 9.7);
+    run();
+  });
+  $("channel").addEventListener("change", () => { if (samples.length) run(); });
+
+  function run() {
+    result = PPG.analyse(samples, $("channel").value);
+    if (result.error) { status(result.error); return; }
+    status(`Analyseret ${result.duration.toFixed(1)} s · kanal brugt: ${name(result.used)}`);
+    $("results").classList.remove("hidden");
+    $("bpm").textContent = result.bpm ? Math.round(result.bpm) : "–";
+    $("nbeats").textContent = result.beats.length;
+    $("irr").textContent = result.irregular.length;
+    $("quality").textContent = result.quality;
+    $("c-q").className = "card " + (result.quality === "god" ? "" : result.quality === "usikker" ? "warn" : "bad");
+    $("c-irr").className = "card " + (result.irregular.length ? "warn" : "");
+    $("csv").disabled = false;
+    const rows = ["r", "g", "b"].map((k) => {
+      const c = result.channels[k];
+      const note = c.saturated ? "overstyret (for meget lys)" : c.dc < 15 ? "meget mørk – næsten alt lys absorberet" : k === result.used ? "brugt til pulsen" : "";
+      return `<tr><td><b style="color:${col(k)}">${name(k)}</b></td><td>${c.dc.toFixed(1)}</td><td>${c.ac.toFixed(2)}</td><td>${c.acdc.toFixed(2)}</td><td>${note}</td></tr>`;
+    });
+    $("chTable").innerHTML = rows.join("");
+    drawRaw();
+    drawFilt();
+  }
+
+  const name = (k) => ({ r: "rød", g: "grøn", b: "blå" }[k]);
+  const col = (k) => ({ r: "#d64545", g: "#2e9e6a", b: "#2f6fde" }[k]);
+
+  function setup(cv) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    cv.width = w * dpr; cv.height = h * dpr;
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    return { ctx, w, h };
+  }
+
+  function axes(ctx, w, h, pad, tmax) {
+    ctx.strokeStyle = "#d5dbe5"; ctx.fillStyle = "#6b7585"; ctx.font = "12px system-ui"; ctx.lineWidth = 1;
+    for (let s = 0; s <= tmax; s += tmax > 30 ? 10 : 2) {
+      const x = pad + (s / tmax) * (w - 2 * pad);
+      ctx.beginPath(); ctx.moveTo(x, 10); ctx.lineTo(x, h - 22); ctx.stroke();
+      ctx.fillText(s + " s", x - 8, h - 6);
+    }
+  }
+
+  function line(ctx, t, v, w, h, pad, tmax, color, lo, hi) {
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    v.forEach((y, i) => {
+      const x = pad + (t[i] / tmax) * (w - 2 * pad);
+      const yy = 12 + (1 - (y - lo) / (hi - lo || 1)) * (h - 40);
+      i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy);
+    });
+    ctx.stroke();
+  }
+
+  function drawRaw() {
+    const { ctx, w, h } = setup($("plotRaw"));
+    const tmax = result.duration, pad = 20;
+    axes(ctx, w, h, pad, tmax);
+    ["r", "g", "b"].forEach((k) => {
+      const v = result.channels[k].raw;
+      const lo = Math.min(...v), hi = Math.max(...v);
+      line(ctx, result.time, v, w, h, pad, tmax, col(k), lo, hi);
+    });
+  }
+
+  function drawFilt() {
+    const { ctx, w, h } = setup($("plotFilt"));
+    const tmax = result.duration, pad = 20;
+    axes(ctx, w, h, pad, tmax);
+    const v = result.channels[result.used].filtered;
+    const edge = result.fs;
+    const core = v.slice(edge, v.length - edge);
+    const lo = Math.min(...core), hi = Math.max(...core);
+    line(ctx, result.time, v.map((x) => Math.min(hi, Math.max(lo, x))), w, h, pad, tmax, col(result.used), lo, hi);
+    const irr = new Set(result.irregular);
+    result.beats.forEach((i, n) => {
+      const x = pad + (result.time[i] / tmax) * (w - 2 * pad);
+      const y = 12 + (1 - (Math.min(hi, Math.max(lo, v[i])) - lo) / (hi - lo || 1)) * (h - 40);
+      ctx.fillStyle = irr.has(n) ? "#d64545" : "#1b2a41";
+      ctx.beginPath(); ctx.arc(x, y, irr.has(n) ? 6 : 4, 0, 2 * Math.PI); ctx.fill();
+    });
+  }
+
+  $("csv").addEventListener("click", () => {
+    const ch = result.channels;
+    let out = "tid_s;roed;groen;blaa;filtreret_" + name(result.used) + "\n";
+    result.time.forEach((t, i) => {
+      out += [t.toFixed(3), ch.r.raw[i].toFixed(2), ch.g.raw[i].toFixed(2), ch.b.raw[i].toFixed(2),
+              ch[result.used].filtered[i].toFixed(3)].join(";").replace(/\./g, ",") + "\n";
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([out], { type: "text/csv" }));
+    a.download = "ppg-data.csv";
+    a.click();
+  });
+
+  window.addEventListener("resize", () => { if (result && !result.error) { drawRaw(); drawFilt(); } });
+})();
+</script>
+</body>
+</html>
